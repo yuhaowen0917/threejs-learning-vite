@@ -5,6 +5,7 @@
 <script setup>
 import { onMounted, ref } from "vue";
 import * as THREE from "three";
+// 轨道控制器
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
@@ -27,7 +28,7 @@ camera.updateProjectionMatrix();
 scene.add(camera);
 
 // 创建立方体
-const geometry = new THREE.BoxGeometry();
+const geometry = new THREE.BoxGeometry(1, 1, 1);
 
 // 材质
 const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
@@ -52,6 +53,22 @@ const render = () => {
   requestAnimationFrame(render);
   // cube.position.x += 0.01;
 };
+
+// 创建轨道控制器
+const controls = new OrbitControls(camera, renderer.domElement);
+// 对轨道控制器改变时进行监听
+controls.addEventListener("change", function () {
+  console.log("触发change");
+});
+
+// 设置控制器阻尼，是控制器效果更真实，必须在动画循环里调用.update()
+controls.enableDamping = false;
+controls.dampingFactor = 0.01;
+controls.update();
+
+// 自动旋转
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.5;
 
 // 挂载完毕之后获取dom
 onMounted(() => {
