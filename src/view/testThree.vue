@@ -13,6 +13,15 @@ const testThree = ref("");
 
 // 创建场景
 const scene = new THREE.Scene();
+// 添加背景色
+// scene.background = new THREE.Color(0x666666);
+// 添加背景图片
+scene.background = new THREE.CubeTextureLoader()
+  .setPath("src/assets/images/")
+  .load(["01.png", "01.png", "01.png", "01.png", "01.png", "01.png"]);
+// 添加雾
+scene.fog = new THREE.Fog(0xcc00cc, 10, 15);
+
 // 初始化相机
 const camera = new THREE.PerspectiveCamera(
   80,
@@ -35,6 +44,7 @@ const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
 
 // 网格
 const cube = new THREE.Mesh(geometry, material);
+// cube.position.set(1, 1, 1);
 scene.add(cube);
 
 // 添加网格地面
@@ -57,9 +67,9 @@ const render = () => {
 // 创建轨道控制器
 const controls = new OrbitControls(camera, renderer.domElement);
 // 对轨道控制器改变时进行监听
-controls.addEventListener("change", function () {
-  console.log("触发change");
-});
+// controls.addEventListener("change", function () {
+//   console.log("触发change");
+// });
 
 // 设置控制器阻尼，是控制器效果更真实，必须在动画循环里调用.update()
 controls.enableDamping = false;
@@ -69,6 +79,11 @@ controls.update();
 // 自动旋转
 controls.autoRotate = true;
 controls.autoRotateSpeed = 0.5;
+
+// 加入辅助轴，帮助我们查看3维坐标轴
+const axesHelper = new THREE.AxesHelper(4);
+axesHelper.position.y = 3;
+scene.add(axesHelper);
 
 // 挂载完毕之后获取dom
 onMounted(() => {
