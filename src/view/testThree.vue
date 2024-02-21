@@ -1,5 +1,7 @@
 <template>
-  <div class="test-three" ref="testThree"></div>
+  <div class="test-three" ref="testThree">
+    <button @click="moveCube">移动物体</button>
+  </div>
 </template>
 
 <script setup>
@@ -30,7 +32,7 @@ const camera = new THREE.PerspectiveCamera(
   1000
 );
 // 初始化相机位置
-camera.position.set(-2, 1, 6);
+camera.position.set(-2, 4, 6);
 camera.aspect = window.innerWidth / window.innerHeight;
 // 更新摄像头矩阵
 camera.updateProjectionMatrix();
@@ -90,6 +92,11 @@ onMounted(() => {
   testThree.value.appendChild(renderer.domElement);
   render();
 });
+
+const moveCube = () => {
+  cube.position.set(1, 2, 1);
+  camera.lookAt(camera.position);
+};
 </script>
 
 <style lang="scss" scoped>
