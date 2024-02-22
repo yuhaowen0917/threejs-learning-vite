@@ -1,6 +1,6 @@
 <template>
   <div class="test-three" ref="testThree">
-    <button @click="moveCube">移动物体</button>
+    <!-- <button @click="moveCube">移动物体</button> -->
   </div>
 </template>
 
@@ -11,16 +11,33 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
+import * as dat from "dat.gui";
+const gui = new dat.GUI();
+
+const controlData = {
+  rotationSpeed: 0.02,
+  color: "#66ccff",
+  wireframe: false,
+};
+const f = gui.addFolder("配置");
+f.add(controlData, "rotationSpeed").min(0.01).max(0.1).step(0.01);
+// 颜色选择器
+f.addColor(controlData, "color");
+// checkbox
+f.add(controlData, "wireframe");
+f.domElement.id = "gui";
+f.open();
+
 const testThree = ref("");
 
 // 创建场景
 const scene = new THREE.Scene();
 // 添加背景色
-// scene.background = new THREE.Color(0x666666);
+scene.background = new THREE.Color(0x666666);
 // 添加背景图片
-scene.background = new THREE.CubeTextureLoader()
-  .setPath("src/assets/images/")
-  .load(["01.png", "01.png", "01.png", "01.png", "01.png", "01.png"]);
+// scene.background = new THREE.CubeTextureLoader()
+//   .setPath("src/assets/images/")
+//   .load(["01.png", "01.png", "01.png", "01.png", "01.png", "01.png"]);
 // 添加雾
 scene.fog = new THREE.Fog(0xcc00cc, 10, 15);
 
@@ -64,6 +81,8 @@ const render = () => {
   // 引擎自动更新渲染器
   requestAnimationFrame(render);
   // cube.position.x += 0.01;
+  cube.material.color = new THREE.Color(controlData.color);
+  material.wireframe = controlData.wireframe;
 };
 
 // 创建轨道控制器
@@ -89,6 +108,7 @@ scene.add(axesHelper);
 
 // 挂载完毕之后获取dom
 onMounted(() => {
+  testThree.value.appendChild(f.domElement);
   testThree.value.appendChild(renderer.domElement);
   render();
 });
@@ -99,9 +119,14 @@ const moveCube = () => {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 .test-three {
   // height: 100vh;
   // width: 100vw;
+}
+#gui {
+  position: absolute;
+  right: 0;
+  width: 300px;
 }
 </style>
