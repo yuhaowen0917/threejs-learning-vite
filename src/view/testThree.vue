@@ -101,6 +101,13 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 // 设置渲染器的尺寸大小
 renderer.setSize(window.innerWidth, window.innerHeight);
 
+// 监听屏幕的大小改变，修改渲染器的宽高，相机的比例
+window.addEventListener("resize", () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
 const render = () => {
   // 渲染场景
   renderer.render(scene, camera);
