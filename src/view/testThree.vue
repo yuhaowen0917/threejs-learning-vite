@@ -16,7 +16,7 @@ const gui = new dat.GUI();
 
 const controlData = {
   rotationSpeed: 0.02,
-  color: "#66ccff",
+  color: "#ffffff",
   wireframe: false,
 };
 const f = gui.addFolder("配置");
@@ -26,20 +26,20 @@ f.addColor(controlData, "color");
 // checkbox
 f.add(controlData, "wireframe");
 f.domElement.id = "gui";
-f.open();
+// f.open();
 
 const testThree = ref("");
 
 // 创建场景
 const scene = new THREE.Scene();
 // 添加背景色
-scene.background = new THREE.Color(0x666666);
+// scene.background = new THREE.Color(0x666666);
 // 添加背景图片
 // scene.background = new THREE.CubeTextureLoader()
 //   .setPath("src/assets/images/")
 //   .load(["01.png", "01.png", "01.png", "01.png", "01.png", "01.png"]);
 // 添加雾
-scene.fog = new THREE.Fog(0xcc00cc, 10, 15);
+// scene.fog = new THREE.Fog(0xcc00cc, 10, 15);
 
 // 初始化相机
 const camera = new THREE.PerspectiveCamera(
@@ -55,11 +55,37 @@ camera.aspect = window.innerWidth / window.innerHeight;
 camera.updateProjectionMatrix();
 scene.add(camera);
 
+// 创建纹理
+const texture = new THREE.TextureLoader().load("src/assets/textures/01.png");
+// texture.wrapS = THREE.RepeatWrapping;
+// texture.wrapT = THREE.RepeatWrapping;
+// texture.repeat.set(4, 4);
+
+// 创建立体纹理
+const loader = new THREE.CubeTextureLoader();
+loader.setPath("src/assets/textures/restroom/");
+const textureCube = loader.load([
+  "7_r.jpg",
+  "7_l.jpg",
+  "7_u.jpg",
+  "7_d.jpg",
+  "7_f.jpg",
+  "7_b.jpg",
+]);
+scene.background = textureCube;
+
 // 创建立方体
-const geometry = new THREE.BoxGeometry(1, 1, 1);
+// const geometry = new THREE.BoxGeometry(1, 1, 1);
+
+// 创建几何体
+const geometry = new THREE.SphereGeometry(3, 32, 16);
 
 // 材质
-const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+const material = new THREE.MeshBasicMaterial({
+  color: 0x00ff00,
+  // map: texture,
+  envMap: textureCube,
+});
 
 // 网格
 const cube = new THREE.Mesh(geometry, material);
