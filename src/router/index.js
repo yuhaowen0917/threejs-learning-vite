@@ -6,6 +6,11 @@ const routes = [
     name: "testThree",
     component: () => import("../view/testThree.vue"),
   },
+  {
+    path: "/box-geometry",
+    name: "BoxGeometry",
+    component: () => import("../view/BoxGeometry.vue"),
+  },
 ];
 
 const router = createRouter({
