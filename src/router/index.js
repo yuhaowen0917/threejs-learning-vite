@@ -11,6 +11,16 @@ const routes = [
     name: "BoxGeometry",
     component: () => import("../view/BoxGeometry.vue"),
   },
+  {
+    path: "/customize-Uv-coordinate",
+    name: "CustomizeUvCoordinate",
+    component: () => import("../view/CustomizeUvCoordinate.vue"),
+  },
+  {
+    path: "/light",
+    name: "AmbientLight",
+    component: () => import("../view/AmbientLight.vue"),
+  },
 ];
 
 const router = createRouter({
