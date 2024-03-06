@@ -26,7 +26,7 @@ const camera = new THREE.PerspectiveCamera(
   1000
 );
 // 初始化相机位置
-camera.position.set(-2, 4, 7);
+camera.position.set(-2, 4, 6);
 camera.aspect = window.innerWidth / window.innerHeight;
 // 更新摄像头矩阵
 camera.updateProjectionMatrix();
