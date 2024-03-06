@@ -49,11 +49,11 @@ window.addEventListener("resize", () => {
 const geometry = new THREE.BoxGeometry(2, 2, 2);
 // const geometry = new THREE.SphereGeometry(3, 32, 16);
 console.log(geometry);
-
+ 
 // 创建基础网格材质
 const material = new THREE.MeshPhongMaterial({
-  color: 0x00ffff,
-  shininess: 100,
+  color: 0x0099ff,
+  shininess: 1000,
 });
 
 // Mesh网格
@@ -68,12 +68,13 @@ scene.add(cube);
 
 // 添加灯光效果
 // 环境光
-const light = new THREE.AmbientLight(0x404040, 1); // 柔和的白光 color : 颜色, intensity : 光照强度
+const light = new THREE.AmbientLight(0xffffff, 1); // 柔和的白光 color : 颜色, intensity : 光照强度
+
 scene.add(light);
 
 // 点光源
 const point_light = new THREE.PointLight(0xffffff, 400, 100);
-point_light.position.set(5, 3, 5);
+point_light.position.set(5, 5, 5);
 point_light.castShadow = true;
 scene.add( point_light );
 
@@ -81,6 +82,7 @@ scene.add( point_light );
 const ground = new THREE.PlaneGeometry(15, 15); // 模型
 const ground_material = new THREE.MeshPhongMaterial({
   color: 0x1b5e20,
+  // shininess: 100
 }); // 材质
 const ground_cube = new THREE.Mesh(ground, ground_material); // 网格
 // cube.position.set(0, 1, 0);
