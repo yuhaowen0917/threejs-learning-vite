@@ -21,6 +21,16 @@ const routes = [
     name: "AmbientLight",
     component: () => import("../view/AmbientLight.vue"),
   },
+  {
+    path: "/vector",
+    name: "VectorModel",
+    component: () => import("../view/VectorModel.vue"),
+  },
+  {
+    path: "/import-models",
+    name: "ImportModel",
+    component: () => import("../view/ImportModel.vue"),
+  },
 ];
 
 const router = createRouter({
