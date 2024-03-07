@@ -84,12 +84,12 @@ const material = new THREE.MeshPhongMaterial({
 const loader = new GLTFLoader();
 // 加载模型
 loader.load(
-  "./models/free__atlanta_corperate_office_building/scene.gltf",
+  "./models/free__atlanta_corperate_office_building.glb",
   function (glb) {
     console.log("glb", glb);
     // 遍历模型中的物体
     glb.scene.traverse((child) => {
-      console.log(child);
+      //   console.log(child);
       if (child.name === "Cube008__0") {
         child.material = material;
       }
@@ -106,6 +106,15 @@ scene.add(light);
 const directional_light = new THREE.DirectionalLight(0xffffff, 3);
 directional_light.position.set(110, 110, 7);
 scene.add(directional_light);
+
+// 点光源
+const point_light = new THREE.PointLight(0xfff000, 400, 100);
+point_light.position.set(180, 150, -50);
+point_light.castShadow = true;
+scene.add(point_light);
+
+// 添加灯光辅助
+scene.add(new THREE.PointLightHelper(point_light, 10));
 
 // 挂载完毕之后获取dom
 onMounted(() => {
