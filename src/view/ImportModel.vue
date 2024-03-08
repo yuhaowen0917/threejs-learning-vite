@@ -77,7 +77,7 @@ scene.add(axesHelper);
 
 // 创建材质
 const material = new THREE.MeshPhongMaterial({
-  color: 0xff3300,
+  color: 0xff00ff,
 });
 
 // 创建GLTF实例
@@ -89,8 +89,11 @@ loader.load(
     console.log("glb", glb);
     // 遍历模型中的物体
     glb.scene.traverse((child) => {
-      //   console.log(child);
+      console.log(child);
       if (child.name === "Cube008__0") {
+        child.material = material;
+      }
+      if (child.name === "Cube007_Glass_Lobby_0") {
         child.material = material;
       }
     });
@@ -103,12 +106,12 @@ const light = new THREE.AmbientLight(0x404040, 1); // 柔和的白光 color : �
 scene.add(light);
 
 // 平行光
-const directional_light = new THREE.DirectionalLight(0xffffff, 3);
+const directional_light = new THREE.DirectionalLight(0xffffff, 8);
 directional_light.position.set(110, 110, 7);
 scene.add(directional_light);
 
 // 点光源
-const point_light = new THREE.PointLight(0xfff000, 400, 100);
+const point_light = new THREE.PointLight(0xffffff, 400, 100);
 point_light.position.set(180, 150, -50);
 point_light.castShadow = true;
 scene.add(point_light);
