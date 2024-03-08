@@ -26,7 +26,7 @@ const camera = new THREE.PerspectiveCamera(
   10000
 );
 // 初始化相机位置
-camera.position.set(320, 150, 90);
+camera.position.set(60, 60, 70);
 camera.aspect = window.innerWidth / window.innerHeight;
 // 更新摄像头矩阵
 camera.updateProjectionMatrix();
@@ -46,7 +46,7 @@ window.addEventListener("resize", () => {
 });
 
 // 添加网格地面
-const gridHelper = new THREE.GridHelper(20, 20);
+const gridHelper = new THREE.GridHelper(40, 40);
 scene.add(gridHelper);
 
 const render = () => {
@@ -77,36 +77,36 @@ scene.add(axesHelper);
 
 // 创建材质
 const material = new THREE.MeshPhongMaterial({
-  color: 0xff00ff,
+  color: 0xff2200,
 });
 
 // 创建GLTF实例
 const loader = new GLTFLoader();
 // 加载模型
-loader.load(
-  "./models/free__atlanta_corperate_office_building.glb",
-  function (glb) {
-    console.log("glb", glb);
-    // 遍历模型中的物体
-    glb.scene.traverse((child) => {
-      console.log(child);
-      if (child.name === "Cube008__0") {
-        child.material = material;
-      }
-      if (child.name === "Cube007_Glass_Lobby_0") {
-        child.material = material;
-      }
-    });
-    scene.add(glb.scene);
-  }
-);
+loader.load("./models/medieval_fantasy_book.glb", function (glb) {
+  console.log("glb", glb);
+  // 遍历模型中的物体
+  glb.scene.traverse((child) => {
+    console.log(child);
+    if (child.name === "Cube008__0") {
+      child.material = material;
+    }
+    if (child.name === "Sketchfab_Scene") {
+      child.material = material;
+    }
+  });
+  // glb.scene.scale.set(20, 20, 20);
+  glb.scene.position.set(0, 20, 0);
+
+  scene.add(glb.scene);
+});
 
 // 环境光
 const light = new THREE.AmbientLight(0x404040, 1); // 柔和的白光 color : 颜色, intensity : 光照强度
 scene.add(light);
 
 // 平行光
-const directional_light = new THREE.DirectionalLight(0xffffff, 8);
+const directional_light = new THREE.DirectionalLight(0xffffff, 10);
 directional_light.position.set(110, 110, 7);
 scene.add(directional_light);
 
