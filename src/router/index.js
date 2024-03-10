@@ -31,6 +31,11 @@ const routes = [
     name: "ImportModel",
     component: () => import("../view/ImportModel.vue"),
   },
+  {
+    path: "/test-pages",
+    name: "testPages",
+    component: () => import("../view/pages/pages.vue"),
+  },
 ];
 
 const router = createRouter({
