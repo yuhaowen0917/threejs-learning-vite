@@ -1,5 +1,8 @@
 <template>
   <div ref="testModels" class="test-models"></div>
+  <div class="btn-box">
+    <button @click="moveAnimationFrame">相机移动</button>
+  </div>
 </template>
 
 <script setup>
@@ -10,6 +13,10 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { STLLoader } from "three/addons/loaders/STLLoader.js";
+//引入性能监视器.js
+import Stats from "three/addons/libs/stats.module.js";
+
+import * as TWEEN from "@tweenjs/tween.js";
 
 const testModels = ref("");
 const boxWidth = ref("");
@@ -35,7 +42,7 @@ const initThreeModels = () => {
     10000
   );
   // 初始化相机位置
-  camera.position.set(-2, 8, 12);
+  camera.position.set(1, 5, 30);
   camera.aspect = testModels.value.clientWidth / testModels.value.clientHeight;
   // 更新摄像头矩阵
   camera.updateProjectionMatrix();
@@ -50,7 +57,6 @@ const initThreeModels = () => {
   renderer.toneMappingExposure = 1.25; //色调映射曝光度
   renderer.shadowMap.enabled = true; //阴影就不用说了
   renderer.shadowMap.type = THREE.PCFSoftShadowMap; //阴影类型（处理运用Shadow Map产生的阴影锯齿
-  console.log(renderer);
   // 监听屏幕的大小改变，修改渲染器的宽高，相机的比例
   window.addEventListener("resize", () => {
     // console.log(testModels.value.clientWidth, testModels.value.clientHeight);
@@ -65,7 +71,7 @@ const initThreeModels = () => {
 
   // 创建轨道控制器
   controls = new OrbitControls(camera, renderer.domElement);
-
+  // controls.target.set(0, 0, 0);
   // 设置控制器阻尼，是控制器效果更真实，必须在动画循环里调用.update()
   controls.enableDamping = false;
   controls.dampingFactor = 0.01;
@@ -96,29 +102,49 @@ const initThreeModels = () => {
 };
 
 const render = () => {
+  // stats.begin();
+  // stats.end();
+  stats.update();
   // 渲染场景
   renderer.render(scene, camera);
   // 引擎自动更新渲染器
   requestAnimationFrame(render);
+  TWEEN.update();
+  // if (shimo_meshl) {
+  //   shimo_meshl.rotation.z += 0.01;
+  //   // console.log(shimo_meshl.position.clone().y);
+  //   if (shimo_meshl.position.clone().y < 10) {
+  //     shimo_meshl.position.y += 0.01;
+  //     // console.log(shimo_meshl.position.clone().y);
+  //   } else {
+  //     shimo_meshl.position.y = 2;
+  //   }
+  // }
 };
 
+var stats = new Stats();
+stats.setMode(0); // 0: fps, 1: ms
+// 将stats的界面对应左上角
+stats.domElement.style.position = "absolute";
+stats.domElement.style.left = "50px";
+stats.domElement.style.top = "00px";
+
 onMounted(() => {
-  console.log(
-    // document.querySelector(".test-models"),
-    testModels.value,
-    testModels.value.clientWidth,
-    testModels.value.clientHeight
-  );
+  // console.log(
+  //   testModels.value,
+  //   testModels.value.clientWidth,
+  //   testModels.value.clientHeight
+  // );
   boxWidth.value = testModels.value.clientWidth;
   boxHeight.value = testModels.value.clientHeight;
   initThreeModels();
   testModels.value.appendChild(renderer.domElement);
+  testModels.value.appendChild(stats.domElement);
   render();
   stlModels();
   initLight();
   stlModels_long();
   stlModels_book();
-
   // observer = new ResizeObserver(handleResize);
   // observer.observe(testModels.value);
 });
@@ -203,18 +229,19 @@ const stlModels_book = () => {
 };
 
 // 石魔
+let shimo_meshl;
 stlloader.load("./models/stlFormatModels/shimo.stl", function (stl) {
   // console.log("stl", stl);
   var material = new THREE.MeshLambertMaterial({
     color: 0x727272,
   }); //材质对象Material
-  var mesh = new THREE.Mesh(stl, material); //网格模型对象Mesh
-  mesh.rotation.x = -0.5 * Math.PI; //将模型摆正
-  mesh.scale.set(2, 2, 2); //缩放
-  mesh.position.set(20, 2, 0);
+  shimo_meshl = new THREE.Mesh(stl, material); //网格模型对象Mesh
+  shimo_meshl.rotation.x = -0.5 * Math.PI; //将模型摆正
+  shimo_meshl.scale.set(2, 2, 2); //缩放
+  shimo_meshl.position.set(20, 2, 0);
   // mesh.translateX(10);
   stl.center(); //居中显示
-  scene.add(mesh);
+  scene.add(shimo_meshl);
 });
 
 stlloader.load("./models/stlFormatModels/test01.stl", function (stl) {
@@ -243,7 +270,7 @@ stlloader.load("./models/stlFormatModels/test01.stl", function (stl) {
 const gltfloader = new GLTFLoader();
 // 加载模型
 gltfloader.load("./models/glbModels/medieval_fantasy_book.glb", function (glb) {
-  console.log("glb", glb);
+  // console.log("glb", glb);
   // 遍历模型中的物体
   glb.scene.traverse((child) => {
     // console.log(child);
@@ -281,7 +308,18 @@ const initLight = () => {
 };
 
 // 照相机移动效果
-const moveAnimationFrame = () => {};
+const vector = new THREE.Vector3(10, 10, 10);
+const moveAnimationFrame = () => {
+  camera.position.add(vector);
+  console.log("当前位置==>", camera.position.clone());
+  let position = { x: 2, y: 5, z: 8 };
+  let tween = new TWEEN.Tween(camera.position).to(position, 3000);
+  tween.onComplete(function () {
+    controls.enabled = true;
+  });
+  tween.start();
+  camera.lookAt(-1, 5, 12);
+};
 </script>
 
 <style lang="scss" scoped>
@@ -289,5 +327,10 @@ const moveAnimationFrame = () => {};
   width: 100%;
   height: 100%;
   // border: 1px solid #ff2a2a;
+}
+.btn-box {
+  position: absolute;
+  bottom: 10%;
+  left: 10%;
 }
 </style>
