@@ -128,6 +128,6 @@ onMounted(() => {
     
 <style lang="scss">
 div{
-  color: #fcfcfc;
+  color: #ff7272;
 }
 </style>

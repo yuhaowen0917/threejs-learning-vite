@@ -125,13 +125,6 @@ const render = () => {
   // }
 };
 
-var stats = new Stats();
-stats.setMode(0); // 0: fps, 1: ms
-// 将stats的界面对应左上角
-stats.domElement.style.position = "absolute";
-stats.domElement.style.left = "50px";
-stats.domElement.style.top = "00px";
-
 onMounted(() => {
   // console.log(
   //   testModels.value,
@@ -173,6 +166,14 @@ const handleResize = (entries) => {
     // renderer.setSize(testModels.value.clientWidth, testModels.value.clientHeight)
   }
 };
+
+// 性能监视器
+var stats = new Stats();
+stats.setMode(0); // 0: fps, 1: ms
+// 将stats的界面对应左上角
+stats.domElement.style.position = "absolute";
+stats.domElement.style.left = "50px";
+stats.domElement.style.top = "00px";
 
 // 测试到如一个stl格式的模型
 const stlloader = new STLLoader();
@@ -238,12 +239,12 @@ let shimo_meshl;
 stlloader.load("./models/stlFormatModels/shimo.stl", function (stl) {
   // console.log("stl", stl);
   var material = new THREE.MeshLambertMaterial({
-    color: 0x727272,
+    color: 0xff7272,
   }); //材质对象Material
   shimo_meshl = new THREE.Mesh(stl, material); //网格模型对象Mesh
   shimo_meshl.rotation.x = -0.5 * Math.PI; //将模型摆正
   shimo_meshl.scale.set(0.5, 0.5, 0.5); //缩放
-  shimo_meshl.position.set(0, 3.6, 5.5);
+  shimo_meshl.position.set(0, 3.67, 5.5);
   // mesh.translateX(10);
   stl.center(); //居中显示
   scene.add(shimo_meshl);
@@ -291,6 +292,54 @@ const initGltfModels = () => {
       scene.add(glb.scene);
     }
   );
+  // 车
+  gltfloader.load("./models/glbModels/aston_martin_car.glb", function (glb) {
+    // console.log("glb", glb);
+    // 遍历模型中的物体
+    // glb.scene.traverse((child) => {
+    //   console.log(child);
+    // });
+    glb.scene.scale.set(1.2, 1.2, 1.2);
+    glb.scene.position.set(10, 0, 10);
+
+    scene.add(glb.scene);
+  });
+  // 机器人士兵
+  gltfloader.load("./models/glbModels/spartan_armour.glb", (glb) => {
+    // console.log("glb", glb);
+    // 遍历模型中的物体
+    // glb.scene.traverse((child) => {
+    //   console.log(child);
+    // });
+    glb.scene.scale.set(1, 1, 1);
+    glb.scene.position.set(14, 0, 10);
+
+    scene.add(glb.scene);
+  });
+  // 痛车
+  gltfloader.load("./models/glbModels/nissan_silvia_car.glb", (glb) => {
+    // console.log("glb", glb);
+    // 遍历模型中的物体
+    // glb.scene.traverse((child) => {
+    //   console.log(child);
+    // });
+    glb.scene.scale.set(1.5, 1.5, 1.5);
+    glb.scene.position.set(6, 0, 10);
+
+    scene.add(glb.scene);
+  });
+  // 飞行器
+  gltfloader.load("./models/glbModels/buster_drone.glb", (glb) => {
+    // console.log("glb", glb);
+    // 遍历模型中的物体
+    // glb.scene.traverse((child) => {
+    //   console.log(child);
+    // });
+    glb.scene.scale.set(1, 1, 1);
+    glb.scene.position.set(17, 1.5, 10);
+
+    scene.add(glb.scene);
+  });
 };
 
 // 灯光
@@ -320,7 +369,7 @@ const initLight = () => {
 };
 
 // 照相机移动效果
-const vector = new THREE.Vector3(10, 10, 10);
+const vector = new THREE.Vector3(0, 10, 0);
 const moveAnimationFrame = () => {
   // camera.position.add(vector);
   console.log("当前位置==>", camera.position.clone());
@@ -332,6 +381,30 @@ const moveAnimationFrame = () => {
   tween.start();
   camera.lookAt(-1, 5, 12);
 };
+
+// 点击模型事件
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+document.addEventListener("click", (event) => {
+  // console.log(event);
+  // 将鼠标位置归一化为设备坐标。x 和 y 方向的取值范围是 (-1 to +1)
+  pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+  pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  console.log(pointer);
+  // 通过摄像机和鼠标位置更新射线
+  raycaster.setFromCamera(pointer, camera);
+  // 计算物体和射线的焦点
+  const intersects = raycaster.intersectObjects(scene.children);
+  // 射线涉及到的物体集合
+  console.log(intersects);
+  if (intersects.length > 0) {
+    for (let i = 0; i < intersects.length; i++) {
+      intersects[i].object.material.color.set(0xff0000);
+      intersects[i].object.rotation.x += (10 * Math.PI) / 180;
+      // intersects[i].object.position.add(vector);
+    }
+  }
+});
 </script>
 
 <style lang="scss" scoped>
