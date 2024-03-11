@@ -87,7 +87,7 @@ loader.load("./models/medieval_fantasy_book.glb", function (glb) {
   console.log("glb", glb);
   // 遍历模型中的物体
   glb.scene.traverse((child) => {
-    console.log(child);
+    // console.log(child);
     if (child.name === "Cube008__0") {
       child.material = material;
     }
@@ -127,4 +127,7 @@ onMounted(() => {
 </script>
     
 <style lang="scss">
+div{
+  color: #eee350;
+}
 </style>

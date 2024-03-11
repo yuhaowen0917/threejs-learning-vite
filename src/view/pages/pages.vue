@@ -11,8 +11,8 @@ import testComponents from "./testComponents.vue";
 
 <style lang="scss" scoped>
 .tets-pages {
-    width: 50%;
-    height: 400px;
+    width: 75%;
+    height: 600px;
     margin: 120px 0 0 120px;
 }
 </style>

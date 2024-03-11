@@ -79,7 +79,7 @@ scene.background = textureCube;
 
 // 创建几何体
 const geometry = new THREE.SphereGeometry(3, 32, 16);
-
+console.log(geometry);
 // 材质
 const material = new THREE.MeshBasicMaterial({
   color: 0x00ff00,
