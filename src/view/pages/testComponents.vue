@@ -44,6 +44,9 @@ const initThreeModels = () => {
   // 初始化相机位置
   camera.position.set(1, 5, 30);
   camera.aspect = testModels.value.clientWidth / testModels.value.clientHeight;
+  // camera.position.set(10, 50, 0); //相机定位在y轴450
+  // camera.target = new THREE.Vector3(1, 5, 30); //设置目标点
+  // camera.lookAt(camera.target); //看向y轴负方向
   // 更新摄像头矩阵
   camera.updateProjectionMatrix();
   scene.add(camera);
@@ -145,6 +148,7 @@ onMounted(() => {
   initLight();
   stlModels_long();
   stlModels_book();
+  initGltfModels();
   // observer = new ResizeObserver(handleResize);
   // observer.observe(testModels.value);
 });
@@ -176,10 +180,11 @@ const stlModels = () => {
   stlloader.load("./models/stlFormatModels/Cottage_FREE.stl", function (stl) {
     // console.log("stl", stl);
     var material = new THREE.MeshLambertMaterial({
-      color: 0xffffff,
+      color: 0x727272,
     }); //材质对象Material
     var mesh = new THREE.Mesh(stl, material); //网格模型对象Mesh
     mesh.rotation.x = -0.5 * Math.PI; //将模型摆正
+    mesh.rotation.z = Math.PI;
     mesh.scale.set(1, 1, 1); //缩放
     mesh.position.set(0, 5, 0);
     mesh.translateX(1);
@@ -198,9 +203,9 @@ const stlModels_long = () => {
     }); //材质对象Material
     var mesh = new THREE.Mesh(stl, material); //网格模型对象Mesh
     mesh.rotation.x = -0.5 * Math.PI; //将模型摆正
-    mesh.rotation.z = Math.PI / 2;
+    // mesh.rotation.z = Math.PI / 2;
     mesh.scale.set(0.01, 0.01, 0.01); //缩放
-    mesh.position.set(-5.5, 0, 6);
+    mesh.position.set(-2.3, 0, 1);
     // mesh.translateX(10);
     mesh.translateY(-5);
     mesh.translateZ(3.6);
@@ -213,7 +218,7 @@ const stlModels_book = () => {
   stlloader.load(
     "./models/stlFormatModels/medieval_fantasy_book.stl",
     function (stl) {
-      console.log("stl", stl);
+      // console.log("stl", stl);
       var material = new THREE.MeshLambertMaterial({
         color: 0xffffff,
       }); //材质对象Material
@@ -237,13 +242,14 @@ stlloader.load("./models/stlFormatModels/shimo.stl", function (stl) {
   }); //材质对象Material
   shimo_meshl = new THREE.Mesh(stl, material); //网格模型对象Mesh
   shimo_meshl.rotation.x = -0.5 * Math.PI; //将模型摆正
-  shimo_meshl.scale.set(2, 2, 2); //缩放
-  shimo_meshl.position.set(20, 2, 0);
+  shimo_meshl.scale.set(0.5, 0.5, 0.5); //缩放
+  shimo_meshl.position.set(0, 3.6, 5.5);
   // mesh.translateX(10);
   stl.center(); //居中显示
   scene.add(shimo_meshl);
 });
 
+// 徽章 金属质感测试
 stlloader.load("./models/stlFormatModels/test01.stl", function (stl) {
   // console.log("stl", stl);
   var material = new THREE.MeshPhysicalMaterial({
@@ -268,18 +274,24 @@ stlloader.load("./models/stlFormatModels/test01.stl", function (stl) {
 
 // 创建GLTF实例
 const gltfloader = new GLTFLoader();
-// 加载模型
-gltfloader.load("./models/glbModels/medieval_fantasy_book.glb", function (glb) {
-  // console.log("glb", glb);
-  // 遍历模型中的物体
-  glb.scene.traverse((child) => {
-    // console.log(child);
-  });
-  glb.scene.scale.set(0.1, 0.1, 0.1);
-  glb.scene.position.set(-20, 5, 10);
 
-  scene.add(glb.scene);
-});
+const initGltfModels = () => {
+  // 加载模型
+  gltfloader.load(
+    "./models/glbModels/medieval_fantasy_book.glb",
+    function (glb) {
+      // console.log("glb", glb);
+      // 遍历模型中的物体
+      // glb.scene.traverse((child) => {
+      //   console.log(child);
+      // });
+      glb.scene.scale.set(0.1, 0.1, 0.1);
+      glb.scene.position.set(-20, 5, 10);
+
+      scene.add(glb.scene);
+    }
+  );
+};
 
 // 灯光
 const initLight = () => {
@@ -310,9 +322,9 @@ const initLight = () => {
 // 照相机移动效果
 const vector = new THREE.Vector3(10, 10, 10);
 const moveAnimationFrame = () => {
-  camera.position.add(vector);
+  // camera.position.add(vector);
   console.log("当前位置==>", camera.position.clone());
-  let position = { x: 2, y: 5, z: 8 };
+  let position = { x: 0, y: 5, z: 10 };
   let tween = new TWEEN.Tween(camera.position).to(position, 3000);
   tween.onComplete(function () {
     controls.enabled = true;
