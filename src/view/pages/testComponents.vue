@@ -45,10 +45,15 @@ const initThreeModels = () => {
   renderer = new THREE.WebGLRenderer({ antialias: true });
   // 设置渲染器的尺寸大小
   renderer.setSize(testModels.value.clientWidth, testModels.value.clientHeight);
-
+  renderer.physicallyCorrectLights = true; //正确的物理灯光照射
+  renderer.toneMapping = THREE.ACESFilmicToneMapping; //aces标准
+  renderer.toneMappingExposure = 1.25; //色调映射曝光度
+  renderer.shadowMap.enabled = true; //阴影就不用说了
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap; //阴影类型（处理运用Shadow Map产生的阴影锯齿
+  console.log(renderer);
   // 监听屏幕的大小改变，修改渲染器的宽高，相机的比例
   window.addEventListener("resize", () => {
-    console.log(testModels.value.clientWidth, testModels.value.clientHeight);
+    // console.log(testModels.value.clientWidth, testModels.value.clientHeight);
     camera.aspect =
       testModels.value.clientWidth / testModels.value.clientHeight;
     camera.updateProjectionMatrix();
@@ -56,7 +61,6 @@ const initThreeModels = () => {
       testModels.value.clientWidth,
       testModels.value.clientHeight
     );
-    renderer.shadowMap.enabled = true;
   });
 
   // 创建轨道控制器
@@ -85,6 +89,10 @@ const initThreeModels = () => {
   // // Mesh网格
   // const cube = new THREE.Mesh(geometry, material);
   // scene.add(cube);
+
+  // 添加网格地面
+  const gridHelper = new THREE.GridHelper(40, 40);
+  scene.add(gridHelper);
 };
 
 const render = () => {
@@ -111,8 +119,8 @@ onMounted(() => {
   stlModels_long();
   stlModels_book();
 
-  observer = new ResizeObserver(handleResize);
-  observer.observe(testModels.value);
+  // observer = new ResizeObserver(handleResize);
+  // observer.observe(testModels.value);
 });
 
 let observer = null;
@@ -123,15 +131,16 @@ const handleResize = (entries) => {
     const { width, height } = entry.contentRect;
     change_width.value = Number(width).toFixed();
     change_height.value = Number(height).toFixed();
-    // console.log(
-    //   `宽度：${Number(width).toFixed()}, 高度：${Number(height).toFixed()}`
-    // );
+    console.log(
+      `宽度：${Number(width).toFixed()}, 高度：${Number(height).toFixed()}`
+    );
     // 这里可以执行针对宽高变化的操作
     // 重新渲染
-    // camera.aspect = change_width.value / change_height.value;
+    camera.aspect =
+      testModels.value.clientWidth / testModels.value.clientHeight;
     // console.log('窗口', window.innerWidth, window.innerHeight)
     // camera.updateProjectionMatrix();
-    // renderer.setSize(change_width.value.toString, change_height.value.toString)
+    // renderer.setSize(testModels.value.clientWidth, testModels.value.clientHeight)
   }
 };
 
@@ -146,7 +155,7 @@ const stlModels = () => {
     var mesh = new THREE.Mesh(stl, material); //网格模型对象Mesh
     mesh.rotation.x = -0.5 * Math.PI; //将模型摆正
     mesh.scale.set(1, 1, 1); //缩放
-    mesh.position.set(0, 8, 0);
+    mesh.position.set(0, 5, 0);
     mesh.translateX(1);
     mesh.translateZ(1);
     stl.center(); //居中显示
@@ -159,15 +168,17 @@ const stlModels_long = () => {
     // console.log("stl", stl);
     var material = new THREE.MeshPhysicalMaterial({
       color: 0xeee350,
+      roughness: 0.6,
     }); //材质对象Material
     var mesh = new THREE.Mesh(stl, material); //网格模型对象Mesh
     mesh.rotation.x = -0.5 * Math.PI; //将模型摆正
-    mesh.scale.set(0.05, 0.05, 0.05); //缩放
-    mesh.position.set(0, 0, 0);
+    mesh.rotation.z = Math.PI / 2;
+    mesh.scale.set(0.01, 0.01, 0.01); //缩放
+    mesh.position.set(-5.5, 0, 6);
     // mesh.translateX(10);
-    mesh.translateY(-20);
-    mesh.translateZ(5);
-    stl.center(); //居中显示
+    mesh.translateY(-5);
+    mesh.translateZ(3.6);
+    stl.center(); //居中显
     scene.add(mesh);
   });
 };
@@ -178,18 +189,70 @@ const stlModels_book = () => {
     function (stl) {
       console.log("stl", stl);
       var material = new THREE.MeshLambertMaterial({
-        color: 0x00ff00,
+        color: 0xffffff,
       }); //材质对象Material
       var mesh = new THREE.Mesh(stl, material); //网格模型对象Mesh
       mesh.rotation.x = -0.5 * Math.PI; //将模型摆正
       mesh.scale.set(0.1, 0.1, 0.1); //缩放
-      mesh.position.set(-20, 10, 0);
+      mesh.position.set(-20, 5, 0);
       // mesh.translateX(10);
       stl.center(); //居中显示
       scene.add(mesh);
     }
   );
 };
+
+// 石魔
+stlloader.load("./models/stlFormatModels/shimo.stl", function (stl) {
+  // console.log("stl", stl);
+  var material = new THREE.MeshLambertMaterial({
+    color: 0x727272,
+  }); //材质对象Material
+  var mesh = new THREE.Mesh(stl, material); //网格模型对象Mesh
+  mesh.rotation.x = -0.5 * Math.PI; //将模型摆正
+  mesh.scale.set(2, 2, 2); //缩放
+  mesh.position.set(20, 2, 0);
+  // mesh.translateX(10);
+  stl.center(); //居中显示
+  scene.add(mesh);
+});
+
+stlloader.load("./models/stlFormatModels/test01.stl", function (stl) {
+  // console.log("stl", stl);
+  var material = new THREE.MeshPhysicalMaterial({
+    color: 0x727272,
+    metalness: 1.0,
+    roughness: 0.5,
+    clearcoat: 1.0,
+    clearcoatRoughness: 0.05,
+  }); //材质对象Material
+  var mesh = new THREE.Mesh(stl, material); //网格模型对象Mesh
+  // mesh.rotation.x = -0.5 * Math.PI; //将模型摆正
+  mesh.scale.set(0.5, 0.5, 0.5); //缩放
+  mesh.position.set(10, 10, 15);
+  // 物体接收光源
+  mesh.receiveShadow = true;
+  // 物体投射光源
+  mesh.castShadow = true;
+  // mesh.translateX(10);
+  stl.center(); //居中显示
+  scene.add(mesh);
+});
+
+// 创建GLTF实例
+const gltfloader = new GLTFLoader();
+// 加载模型
+gltfloader.load("./models/glbModels/medieval_fantasy_book.glb", function (glb) {
+  console.log("glb", glb);
+  // 遍历模型中的物体
+  glb.scene.traverse((child) => {
+    // console.log(child);
+  });
+  glb.scene.scale.set(0.1, 0.1, 0.1);
+  glb.scene.position.set(-20, 5, 10);
+
+  scene.add(glb.scene);
+});
 
 // 灯光
 const initLight = () => {
@@ -203,20 +266,28 @@ const initLight = () => {
   scene.add(directional_light);
 
   // 点光源
-  const point_light = new THREE.PointLight(0xffffff, 400, 100);
+  const point_light = new THREE.PointLight(0xfcf0f0, 400, 100);
   point_light.position.set(-30, 10, -10);
   point_light.castShadow = true;
   scene.add(point_light);
 
+  const point_light1 = new THREE.PointLight(0xf0f0f0, 400, 100);
+  point_light1.position.set(10, 10, 20);
+  point_light1.castShadow = true;
+  scene.add(point_light1);
+
   // 添加灯光辅助
   scene.add(new THREE.PointLightHelper(point_light, 1));
 };
+
+// 照相机移动效果
+const moveAnimationFrame = () => {};
 </script>
 
 <style lang="scss" scoped>
 .test-models {
   width: 100%;
   height: 100%;
-  border: 1px solid #ff2a2a;
+  // border: 1px solid #ff2a2a;
 }
 </style>

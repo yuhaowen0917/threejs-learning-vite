@@ -83,7 +83,7 @@ const material = new THREE.MeshPhongMaterial({
 // 创建GLTF实例
 const loader = new GLTFLoader();
 // 加载模型
-loader.load("./models/medieval_fantasy_book.glb", function (glb) {
+loader.load("./models/glbModels/medieval_fantasy_book.glb", function (glb) {
   console.log("glb", glb);
   // 遍历模型中的物体
   glb.scene.traverse((child) => {
@@ -128,6 +128,6 @@ onMounted(() => {
     
 <style lang="scss">
 div{
-  color: #eee350;
+  color: #fcfcfc;
 }
 </style>

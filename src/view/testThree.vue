@@ -153,10 +153,10 @@ const moveCube = () => {
 </script>
 
 <style lang="scss">
-.test-three {
-  // height: 100vh;
-  // width: 100vw;
-}
+// .test-three {
+//   // height: 100vh;
+//   // width: 100vw;
+// }
 #gui {
   position: absolute;
   right: 0;
