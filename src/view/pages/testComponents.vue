@@ -440,7 +440,10 @@ const modelsMove = () => {
       car.rotation.y = Math.PI / 2;
       car.position.x += 0.05;
     } else {
-      car.rotation.x += Math.PI / 30;
+      // car.rotation.x += Math.PI / 30;
+      car.position.z = 0;
+      car.position.x = 5;
+      car.rotation.y += -Math.PI / 2;
     }
   }
 };
