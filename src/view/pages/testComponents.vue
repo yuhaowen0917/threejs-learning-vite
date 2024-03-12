@@ -101,7 +101,20 @@ const initThreeModels = () => {
 
   // 添加网格地面
   const gridHelper = new THREE.GridHelper(40, 40);
-  scene.add(gridHelper);
+  // scene.add(gridHelper);
+
+  // 创建地面
+  const ground = new THREE.PlaneGeometry(40, 40); // 模型
+  const ground_material = new THREE.MeshPhongMaterial({
+    color: 0xffffff,
+    // shininess: 100
+  }); // 材质
+  const ground_cube = new THREE.Mesh(ground, ground_material); // 网格
+  // cube.position.set(0, 1, 0);
+  ground_cube.rotation.x -= Math.PI / 2;
+  // 地面设置接收光源
+  ground_cube.receiveShadow = true;
+  scene.add(ground_cube);
 };
 
 const render = () => {
@@ -275,7 +288,6 @@ stlloader.load("./models/stlFormatModels/test01.stl", function (stl) {
 
 // 创建GLTF实例
 const gltfloader = new GLTFLoader();
-
 const initGltfModels = () => {
   // 加载模型
   gltfloader.load(
@@ -400,7 +412,8 @@ document.addEventListener("click", (event) => {
   if (intersects.length > 0) {
     for (let i = 0; i < intersects.length; i++) {
       intersects[i].object.material.color.set(0xff0000);
-      intersects[i].object.rotation.x += (10 * Math.PI) / 180;
+      // intersects[i].object.rotation.x += (10 * Math.PI) / 180;
+      // intersects[i].object.position.x += 10;
       // intersects[i].object.position.add(vector);
     }
   }

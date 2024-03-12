@@ -1,6 +1,5 @@
 <template>
   <div class="test-three" ref="vectorModule">
-    <!-- 灯光 环境光 平行光 点光源 聚光灯 -->
   </div>
 </template>
   
