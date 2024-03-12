@@ -53,7 +53,7 @@ const routes = [
     path: "/animation",
     name: "testAnimation",
     component: () => import("../view/Animation/testAnimation.vue"),
-    meta: { desc: "测试模型的动画效果" },
+    meta: { desc: "测试动画模型的效果" },
   },
 ];
 

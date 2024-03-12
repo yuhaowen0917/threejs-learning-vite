@@ -26,7 +26,7 @@ f.addColor(controlData, "color");
 // checkbox
 f.add(controlData, "wireframe");
 f.domElement.id = "gui";
-// f.open();
+f.open();
 
 const testThree = ref("");
 
