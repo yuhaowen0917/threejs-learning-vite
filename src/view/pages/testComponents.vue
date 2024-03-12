@@ -42,10 +42,10 @@ const initThreeModels = () => {
     10000
   );
   // 初始化相机位置
-  camera.position.set(1, 5, 30);
+  camera.position.set(50, 50, 100);
   camera.aspect = testModels.value.clientWidth / testModels.value.clientHeight;
   // camera.position.set(10, 50, 0); //相机定位在y轴450
-  // camera.target = new THREE.Vector3(1, 5, 30); //设置目标点
+  // camera.target = new THREE.Vector3(100, 50, 30); //设置目标点
   // camera.lookAt(camera.target); //看向y轴负方向
   // 更新摄像头矩阵
   camera.updateProjectionMatrix();
@@ -126,16 +126,8 @@ const render = () => {
   // 引擎自动更新渲染器
   requestAnimationFrame(render);
   TWEEN.update();
-  // if (shimo_meshl) {
-  //   shimo_meshl.rotation.z += 0.01;
-  //   // console.log(shimo_meshl.position.clone().y);
-  //   if (shimo_meshl.position.clone().y < 10) {
-  //     shimo_meshl.position.y += 0.01;
-  //     // console.log(shimo_meshl.position.clone().y);
-  //   } else {
-  //     shimo_meshl.position.y = 2;
-  //   }
-  // }
+  // 模型移动方法
+  modelsMove();
 };
 
 onMounted(() => {
@@ -157,6 +149,7 @@ onMounted(() => {
   initGltfModels();
   // observer = new ResizeObserver(handleResize);
   // observer.observe(testModels.value);
+  moveAnimationFrame();
 });
 
 let observer = null;
@@ -288,6 +281,7 @@ stlloader.load("./models/stlFormatModels/test01.stl", function (stl) {
 
 // 创建GLTF实例
 const gltfloader = new GLTFLoader();
+let car;
 const initGltfModels = () => {
   // 加载模型
   gltfloader.load(
@@ -302,44 +296,83 @@ const initGltfModels = () => {
       glb.scene.position.set(-20, 5, 10);
 
       scene.add(glb.scene);
+    },
+    (xhr) => {
+      // 加载进度
+      const percent = xhr.loaded / xhr.total;
+      // console.log("书,加载进度" + percent);
     }
   );
   // 车
-  gltfloader.load("./models/glbModels/aston_martin_car.glb", function (glb) {
-    // console.log("glb", glb);
-    // 遍历模型中的物体
-    // glb.scene.traverse((child) => {
-    //   console.log(child);
-    // });
-    glb.scene.scale.set(1.2, 1.2, 1.2);
-    glb.scene.position.set(10, 0, 10);
+  gltfloader.load(
+    "./models/glbModels/aston_martin_car.glb",
+    function (glb) {
+      // console.log("glb", glb);
+      // 遍历模型中的物体
+      // glb.scene.traverse((child) => {
+      //   console.log(child);
+      // });
+      glb.scene.scale.set(1.2, 1.2, 1.2);
+      glb.scene.position.set(10, 0, 10);
 
-    scene.add(glb.scene);
-  });
+      scene.add(glb.scene);
+    },
+    (xhr) => {
+      // 加载进度
+      const percent = xhr.loaded / xhr.total;
+      // console.log("汽车加载进度" + percent);
+    }
+  );
   // 机器人士兵
-  gltfloader.load("./models/glbModels/spartan_armour.glb", (glb) => {
-    // console.log("glb", glb);
-    // 遍历模型中的物体
-    // glb.scene.traverse((child) => {
-    //   console.log(child);
-    // });
-    glb.scene.scale.set(1, 1, 1);
-    glb.scene.position.set(14, 0, 10);
+  gltfloader.load(
+    "./models/glbModels/spartan_armour.glb",
+    (glb) => {
+      // console.log("glb", glb);
+      // 遍历模型中的物体
+      // glb.scene.traverse((child) => {
+      //   console.log(child);
+      // });
+      glb.scene.scale.set(1, 1, 1);
+      glb.scene.position.set(14, 0, 10);
 
-    scene.add(glb.scene);
-  });
+      scene.add(glb.scene);
+    },
+    (xhr) => {
+      // 加载进度
+      const percent = xhr.loaded / xhr.total;
+      // console.log("机器人士兵,加载进度" + percent);
+    }
+  );
   // 痛车
-  gltfloader.load("./models/glbModels/nissan_silvia_car.glb", (glb) => {
-    // console.log("glb", glb);
-    // 遍历模型中的物体
-    // glb.scene.traverse((child) => {
-    //   console.log(child);
-    // });
-    glb.scene.scale.set(1.5, 1.5, 1.5);
-    glb.scene.position.set(6, 0, 10);
+  gltfloader.load(
+    "./models/glbModels/nissan_silvia_car.glb",
+    (glb) => {
+      console.log("glb", glb);
 
-    scene.add(glb.scene);
-  });
+      // 遍历模型中的物体
+      glb.scene.traverse((child) => {
+        if (child.isMesh) {
+          // console.log(child);
+          if (child.name === "Object_71" || child.name === "Object_60") {
+            console.log(child.position);
+            child.material = new THREE.MeshLambertMaterial({
+              color: 0xffff00,
+            });
+          }
+        }
+      });
+      car = glb.scene;
+      car.scale.set(1.5, 1.5, 1.5);
+      car.position.set(6, 0, 10);
+
+      scene.add(car);
+    },
+    (xhr) => {
+      // 加载进度
+      const percent = xhr.loaded / xhr.total;
+      // console.log("痛车,加载进度" + percent);
+    }
+  );
   // 飞行器
   gltfloader.load("./models/glbModels/buster_drone.glb", (glb) => {
     // console.log("glb", glb);
@@ -380,18 +413,50 @@ const initLight = () => {
   scene.add(new THREE.PointLightHelper(point_light, 1));
 };
 
+const modelsMove = () => {
+  if (shimo_meshl) {
+    shimo_meshl.rotation.z += 0.01;
+    // console.log(shimo_meshl.position.clone().y);
+    if (shimo_meshl.position.clone().y < 10) {
+      shimo_meshl.position.y += 0.01;
+      // console.log(shimo_meshl.position.clone().y);
+    } else {
+      shimo_meshl.position.y = 3.5;
+    }
+  }
+  if (car) {
+    // console.log(car.position.clone());
+    // car.traverse((child) => {
+    //   if (child.isMesh) {
+    //     if (child.name === "Object_71" || child.name === "Object_60") {
+    //       // console.log(child);
+    //       child.rotation.x += Math.PI / 18;
+    //     }
+    //   }
+    // });
+    if (car.position.clone().z < 30) {
+      car.position.z += 0.05;
+    } else if (car.position.clone().x < 30) {
+      car.rotation.y = Math.PI / 2;
+      car.position.x += 0.05;
+    } else {
+      car.rotation.x += Math.PI / 30;
+    }
+  }
+};
+
 // 照相机移动效果
 const vector = new THREE.Vector3(0, 10, 0);
 const moveAnimationFrame = () => {
   // camera.position.add(vector);
   console.log("当前位置==>", camera.position.clone());
   let position = { x: 0, y: 5, z: 10 };
-  let tween = new TWEEN.Tween(camera.position).to(position, 3000);
+  let tween = new TWEEN.Tween(camera.position).to(position, 4000);
   tween.onComplete(function () {
     controls.enabled = true;
   });
   tween.start();
-  camera.lookAt(-1, 5, 12);
+  camera.lookAt(0, 0, 20);
 };
 
 // 点击模型事件
@@ -408,10 +473,10 @@ document.addEventListener("click", (event) => {
   // 计算物体和射线的焦点
   const intersects = raycaster.intersectObjects(scene.children);
   // 射线涉及到的物体集合
-  console.log(intersects);
+  // console.log(intersects);
   if (intersects.length > 0) {
     for (let i = 0; i < intersects.length; i++) {
-      intersects[i].object.material.color.set(0xff0000);
+      intersects[0].object.material.color.set(0xff0000);
       // intersects[i].object.rotation.x += (10 * Math.PI) / 180;
       // intersects[i].object.position.x += 10;
       // intersects[i].object.position.add(vector);
