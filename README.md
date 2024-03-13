@@ -45,3 +45,28 @@ export default {
 }  
 </script>
 ```
+模型点击事件，通过光射线.Raycaster()
+
+```
+// 点击模型事件
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+document.addEventListener("click", (event) => {
+  // console.log(event);
+  // 将鼠标位置归一化为设备坐标。x 和 y 方向的取值范围是 (-1 to +1)
+  pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+  pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  console.log(pointer);
+  // 通过摄像机和鼠标位置更新射线
+  raycaster.setFromCamera(pointer, camera);
+  // 计算物体和射线的焦点
+  const intersects = raycaster.intersectObjects(scene.children);
+  // 射线涉及到的物体集合
+  // console.log(intersects);
+  if (intersects.length > 0) {
+    for (let i = 0; i < intersects.length; i++) {
+      intersects[0].object.material.color.set(0xff0000);
+    }
+  }
+});
+```

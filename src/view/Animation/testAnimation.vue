@@ -56,7 +56,7 @@ const camera = new THREE.PerspectiveCamera(
 );
 
 // 初始化相机位置
-camera.position.set(-5, 10, 12);
+camera.position.set(-5, 15, 20);
 camera.aspect = window.innerWidth / window.innerHeight;
 camera.lookAt(camera.position); //指相机看向三维中的某个位置
 // 更新摄像头矩阵
@@ -296,15 +296,15 @@ document.addEventListener("click", (event) => {
   const intersects = raycaster.intersectObjects(scene.children);
   if (intersects.length > 0) {
     // 射线涉及到的物体集合
-    console.log(intersects);
+    // console.log(intersects);
     // console.log(intersects[0].object.name);
     // intersects[0].object.position.x += 10;
-    for (let i = 0; i < intersects.length; i++) {
-      // intersects[i].object.material.color.set(0xff0000);
-      // intersects[i].object.rotation.x += (10 * Math.PI) / 180;
-      // intersects[i].object.position.x += 10;
-      // intersects[i].object.position.add(vector);
-    }
+    // for (let i = 0; i < intersects.length; i++) {
+    //   intersects[i].object.material.color.set(0xff0000);
+    //   intersects[i].object.rotation.x += (10 * Math.PI) / 180;
+    //   intersects[i].object.position.x += 10;
+    //   intersects[i].object.position.add(vector);
+    // }
   }
 });
 
@@ -317,34 +317,39 @@ const curve = new THREE.CatmullRomCurve3([
   new THREE.Vector3(10, 0, 10),
   new THREE.Vector3(10, 5, 10),
 ]);
+curve.curveType = "centripetal";
+curve.closed = true; //设置是否闭环
+curve.tension = 0.5;
+console.log(curve);
 
 // 创建轨迹线
-// const points = curve.getPoints(100);
-// const geometry = new THREE.BufferGeometry().setFromPoints(points);
-// const material1 = new THREE.LineBasicMaterial({ color: 0xaaffee });
-// const curveObject = new THREE.Line(geometry, material1);
-// scene.add(curveObject);
+const points = curve.getPoints(100);
+const geometry = new THREE.BufferGeometry().setFromPoints(points);
+const material1 = new THREE.LineBasicMaterial({ color: 0xaaffee });
+const curveObject = new THREE.Line(geometry, material1);
+scene.add(curveObject);
 
-// console.log(points);
 let i = 1;
 const moveAnimationFrame = () => {
   // 运动完轨迹
   // console.log(glt_model.position.clone());
-  // if (i <= points.length) {
-  //   let tween = new TWEEN.Tween(glt_model.position)
-  //     .to(points[i], 200) // 在 8 秒内移动到 position
-  //     .easing(TWEEN.Easing.Linear.None) // 使用缓动函数使动画流畅。;
-  //     .start();
-  //   // tween.onStop(() => {
-  //   //   console.log(glt_model.position.clone());
-  //   // });
-  //   tween.onComplete(function () {
-  //     controls.enabled = true;
-  //     // console.log(glt_model.position.clone());
-  //     moveAnimationFrame();
-  //     i++;
-  //   });
-  // }
+  if (i <= points.length) {
+    let tween = new TWEEN.Tween(glt_model.position)
+      .to(points[i], 200) // 在 8 秒内移动到 position
+      .easing(TWEEN.Easing.Linear.None) // 使用缓动函数使动画流畅。;
+      .start();
+    // tween.onStop(() => {
+    //   console.log(glt_model.position.clone());
+    // });
+    tween.onComplete(function () {
+      // console.log(glt_model.position.clone());
+      moveAnimationFrame();
+      i++;
+    });
+  } else {
+    i = 0;
+    moveAnimationFrame();
+  }
 
   // 重复执行
   // let tween = new TWEEN.Tween(glt_model.position)
@@ -359,30 +364,31 @@ const moveAnimationFrame = () => {
   // });
 
   // 往返执行 链接两个动画
-  let tweenA = new TWEEN.Tween(glt_model.position)
-    .to({ x: 10, y: 2, z: 10 }, 10000) // 在 8 秒内移动到 position
-    .easing(TWEEN.Easing.Linear.None) // 使用缓动函数使动画流畅。;
-    .start();
-  tweenA.onComplete(function () {
-    // console.log(glt_model.position);
-    // glt_model.rotation.x = Math.PI / 2; //将模型摆正
-  });
-  let tweenRot1 = new TWEEN.Tween({ rotY: glt_model.rotation.y }).to(
-    { rotY: Math.PI },
-    1000
-  ); // 设置旋转动画内容， 0.4s
-  // 在tween每次被更新后执行。
-  tweenRot1.onUpdate(function (object, elapsed) {
-    // console.log(glt_model.rotation.y, object, elapsed);
-    glt_model.rotation.y = object.rotY;
-  });
-  let tweenB = new TWEEN.Tween(glt_model.position)
-    .to({ x: -10, y: 2, z: 0 }, 10000) // 在 8 秒内移动到 position
-    .easing(TWEEN.Easing.Quadratic.InOut); // 使用缓动函数使动画流畅。;
-  // 链接多个动画
-  tweenA.chain(tweenRot1);
-  tweenRot1.chain(tweenB);
-  tweenB.chain(tweenA);
+  // console.log(glt_model.position);
+  // let tweenA = new TWEEN.Tween(glt_model.position)
+  //   .to({ x: 10, y: 2, z: 10 }, 7000) // 在 8 秒内移动到 position
+  //   .easing(TWEEN.Easing.Linear.None) // 使用缓动函数使动画流畅。;
+  //   .start();
+  // tweenA.onComplete(function () {
+  //   // console.log(glt_model.position);
+  //   // glt_model.rotation.x = Math.PI / 2; //将模型摆正
+  // });
+  // let tweenRot1 = new TWEEN.Tween({ rotZ: glt_model.rotation.z }).to(
+  //   { rotZ: Math.PI * 2 },
+  //   1000
+  // ); // 设置旋转动画内容， 0.4s
+  // // 在tween每次被更新后执行，实际操作
+  // tweenRot1.onUpdate(function (object, elapsed) {
+  //   // console.log(glt_model.rotation.y, object, elapsed);
+  //   glt_model.rotation.z = object.rotZ;
+  // });
+  // let tweenB = new TWEEN.Tween(glt_model.position)
+  //   .to({ x: -10, y: 2, z: 0 }, 5000) // 在 8 秒内移动到 position
+  //   .easing(TWEEN.Easing.Quadratic.InOut); // 使用缓动函数使动画流畅。;
+  // // 链接多个动画
+  // tweenA.chain(tweenRot1);
+  // tweenRot1.chain(tweenB);
+  // tweenB.chain(tweenA);
 };
 
 const updateRot = function (object, elapsed) {};

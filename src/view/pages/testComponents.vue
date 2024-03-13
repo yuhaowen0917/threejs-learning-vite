@@ -453,7 +453,7 @@ const vector = new THREE.Vector3(0, 10, 0);
 const moveAnimationFrame = () => {
   // camera.position.add(vector);
   console.log("当前位置==>", camera.position.clone());
-  let position = { x: 0, y: 5, z: 10 };
+  let position = { x: 0, y: 5, z: 8 };
   let tween = new TWEEN.Tween(camera.position)
     .to(position, 8000) // 在 8 秒内移动到 position
     .easing(TWEEN.Easing.Quadratic.InOut) // 使用缓动函数使动画流畅。;
@@ -462,7 +462,7 @@ const moveAnimationFrame = () => {
     controls.enabled = true;
   });
   tween.start();
-  camera.lookAt(0, 0, 20);
+  camera.lookAt(20, 0, 0);
 };
 
 // 点击模型事件

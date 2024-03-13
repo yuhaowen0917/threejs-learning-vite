@@ -126,8 +126,8 @@ onMounted(() => {
 });
 </script>
     
-<style lang="scss">
-div{
+<style lang="scss" scoped>
+div {
   color: #ff7272;
 }
 </style>
