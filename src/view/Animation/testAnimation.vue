@@ -21,6 +21,10 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import Stats from "three/addons/libs/stats.module.js";
 
+import * as TWEEN from "@tweenjs/tween.js";
+// 指针控制器
+// import { PointerLockControls } from "three/addons/controls/PointerLockControls.js";
+
 // 性能监视器
 const stats = new Stats();
 stats.setMode(0); // 0: fps, 1: ms
@@ -35,6 +39,7 @@ onMounted(() => {
   testModels.value.appendChild(renderer.domElement);
   render();
   testModels.value.appendChild(stats.domElement);
+  // moveAnimationFrame();
 });
 
 // 创建场景
@@ -53,6 +58,7 @@ const camera = new THREE.PerspectiveCamera(
 // 初始化相机位置
 camera.position.set(-5, 10, 12);
 camera.aspect = window.innerWidth / window.innerHeight;
+camera.lookAt(camera.position); //指相机看向三维中的某个位置
 // 更新摄像头矩阵
 camera.updateProjectionMatrix();
 scene.add(camera);
@@ -71,7 +77,7 @@ window.addEventListener("resize", () => {
 });
 
 // 添加网格地面
-const gridHelper = new THREE.GridHelper(40, 40);
+// const gridHelper = new THREE.GridHelper(40, 40);
 // scene.add(gridHelper);
 
 const render = () => {
@@ -82,6 +88,8 @@ const render = () => {
   requestAnimationFrame(render);
   // 动画函数
   tick();
+  // 动画更新
+  TWEEN.update();
 };
 
 // 创建轨道控制器
@@ -89,6 +97,8 @@ const controls = new OrbitControls(camera, renderer.domElement);
 // 设置控制器阻尼，是控制器效果更真实，必须在动画循环里调用.update()
 controls.enableDamping = false;
 controls.dampingFactor = 0.01;
+// controls.autoRotate = true; // 是否自动旋转
+// controls.autoRotateSpeed = 0.01; // 围绕目标旋转的速度将有多快
 controls.update();
 
 // 加入辅助轴，查看3维坐标轴
@@ -97,7 +107,7 @@ const axesHelper = new THREE.AxesHelper(4);
 scene.add(axesHelper);
 
 // 环境光
-const light = new THREE.AmbientLight(0x404040, 1); // 柔和的白光 color : 颜色, intensity : 光照强度
+const light = new THREE.AmbientLight(0x404040, 100); // 柔和的白光 color : 颜色, intensity : 光照强度
 scene.add(light);
 
 // 平行光
@@ -107,11 +117,12 @@ scene.add(directional_light);
 
 // 点光源
 const point_light = new THREE.PointLight(0xffffff, 400, 100);
-point_light.position.set(2, 5, 5);
+point_light.position.set(-5, 5, -2);
 point_light.castShadow = true;
 scene.add(point_light);
+
 // 添加灯光辅助
-scene.add(new THREE.PointLightHelper(point_light, 1));
+// scene.add(new THREE.PointLightHelper(point_light, 1));
 
 // 材质
 const material = new THREE.MeshPhysicalMaterial({
@@ -126,41 +137,63 @@ const material = new THREE.MeshPhysicalMaterial({
 const loader = new GLTFLoader();
 // 加载模型
 let mixer = null;
-
 // 飞行器动画模型
 const percentage = ref(0);
+let glt_model;
 loader.load(
   "./models/glbModels/buster_drone.glb",
   (glb) => {
-    // console.log("glb", glb);
+    console.log("glb", glb);
     // 遍历模型中的物体
     glb.scene.traverse((child) => {
       if (child.isMesh) {
         // console.log(child);
         if (child.name === "F_P7_leg_0") {
           child.material = new THREE.MeshLambertMaterial({
-            color: 0xffff00,
+            color: 0xff1100,
           });
         }
       }
     });
-    glb.scene.scale.set(1, 1, 1);
-    glb.scene.position.set(0, 2, 0);
+    glt_model = glb.scene;
+    glt_model.scale.set(1, 1, 1);
+    glt_model.position.set(-10, 2, 0);
+    glt_model.rotation.y = (Math.PI / 4) * 3;
+    moveAnimationFrame();
+    // mixer = new THREE.AnimationMixer(glb.scene);
+    // // 这个方法会返回一个AnimationAction
+    // const action = mixer.clipAction(glb.animations[0]);
+    // // 使用play()方法调用这个AnimationAction
+    // action.play();
 
-    mixer = new THREE.AnimationMixer(glb.scene);
-    // 这个方法会返回一个AnimationAction
-    const action = mixer.clipAction(glb.animations[0]);
-    // 使用play()方法调用这个AnimationAction
-    action.play();
+    mixer = startAnimation(glb.scene, glb.animations, glb.animations[0].name);
 
     scene.add(glb.scene);
   },
   (xhr) => {
     // 加载进度
-    const percent = xhr.loaded / xhr.total;
+    // const percent = xhr.loaded / xhr.total;
+    // percentage.value = Number((percent * 100).toFixed());
     // console.log("加载进度" + percent);
   }
 );
+
+/**
+ * 启动特定网格对象的动画。在三维模型的动画数组中按名称查找动画
+ * @param skinnedMesh {THREE.SkinnedMesh} 要设置动画的网格
+ * @param animations {Array} 数组，包含此模型的所有动画
+ * @param animationName {string} 要启动的动画的名称
+ * @return {THREE.AnimationMixer} 要在渲染循环中使用的混合器
+ */
+function startAnimation(skinnedMesh, animations, animationName) {
+  const m_mixer = new THREE.AnimationMixer(skinnedMesh);
+  const clip = THREE.AnimationClip.findByName(animations, animationName);
+  if (clip) {
+    const action = m_mixer.clipAction(clip);
+    action.play();
+  }
+  return m_mixer;
+}
 
 // dragon
 let mixer2 = null;
@@ -178,11 +211,6 @@ let mixer2 = null;
 //     glb.scene.position.set(10, 0, 0);
 
 //     mixer2 = new THREE.AnimationMixer(glb.scene);
-//     // // 这个方法会返回一个AnimationAction
-//     const action = mixer2.clipAction(glb.animations[4]);
-//     // // 使用play()方法调用这个AnimationAction
-//     action.play();
-//     scene.add(glb.scene);
 
 //     // 播放所有动画的方法
 //     // const actions = glb.animations;
@@ -217,11 +245,6 @@ let mixer1 = null;
 
 //     scene.add(glb.scene);
 
-//     mixer1 = new THREE.AnimationMixer(glb.scene);
-//     // 这个方法会返回一个AnimationAction
-//     const action = mixer1.clipAction(glb.animations[0]);
-//     // 使用play()方法调用这个AnimationAction
-//     // action.play();
 //   },
 //   (xhr) => {
 //     // 加载进度
@@ -271,9 +294,9 @@ document.addEventListener("click", (event) => {
   raycaster.setFromCamera(pointer, camera);
   // 计算物体和射线的焦点
   const intersects = raycaster.intersectObjects(scene.children);
-  // 射线涉及到的物体集合
-  // console.log(intersects);
   if (intersects.length > 0) {
+    // 射线涉及到的物体集合
+    console.log(intersects);
     // console.log(intersects[0].object.name);
     // intersects[0].object.position.x += 10;
     for (let i = 0; i < intersects.length; i++) {
@@ -284,6 +307,96 @@ document.addEventListener("click", (event) => {
     }
   }
 });
+
+// 创建轨迹
+const curve = new THREE.CatmullRomCurve3([
+  new THREE.Vector3(-10, 0, 10),
+  new THREE.Vector3(-5, 5, 5),
+  new THREE.Vector3(0, 0, 0),
+  new THREE.Vector3(5, -5, 5),
+  new THREE.Vector3(10, 0, 10),
+  new THREE.Vector3(10, 5, 10),
+]);
+
+// 创建轨迹线
+// const points = curve.getPoints(100);
+// const geometry = new THREE.BufferGeometry().setFromPoints(points);
+// const material1 = new THREE.LineBasicMaterial({ color: 0xaaffee });
+// const curveObject = new THREE.Line(geometry, material1);
+// scene.add(curveObject);
+
+// console.log(points);
+let i = 1;
+const moveAnimationFrame = () => {
+  // 运动完轨迹
+  // console.log(glt_model.position.clone());
+  // if (i <= points.length) {
+  //   let tween = new TWEEN.Tween(glt_model.position)
+  //     .to(points[i], 200) // 在 8 秒内移动到 position
+  //     .easing(TWEEN.Easing.Linear.None) // 使用缓动函数使动画流畅。;
+  //     .start();
+  //   // tween.onStop(() => {
+  //   //   console.log(glt_model.position.clone());
+  //   // });
+  //   tween.onComplete(function () {
+  //     controls.enabled = true;
+  //     // console.log(glt_model.position.clone());
+  //     moveAnimationFrame();
+  //     i++;
+  //   });
+  // }
+
+  // 重复执行
+  // let tween = new TWEEN.Tween(glt_model.position)
+  //   .to({ x: 10, y: 5, z: 10 }, 8000) // 在 8 秒内移动到 position
+  //   .easing(TWEEN.Easing.Linear.None) // 使用缓动函数使动画流畅。;
+  //   .delay(1000) // 1s后执行动画，
+  //   .repeatDelay(500)
+  //   .repeat(10) // 重复10次 .repeat(Infinity) 重复无限次
+  //   .start();
+  // tween.onComplete(function () {
+  //   controls.enabled = true;
+  // });
+
+  // 往返执行 链接两个动画
+  let tweenA = new TWEEN.Tween(glt_model.position)
+    .to({ x: 10, y: 2, z: 10 }, 10000) // 在 8 秒内移动到 position
+    .easing(TWEEN.Easing.Linear.None) // 使用缓动函数使动画流畅。;
+    .start();
+  tweenA.onComplete(function () {
+    // console.log(glt_model.position);
+    // glt_model.rotation.x = Math.PI / 2; //将模型摆正
+  });
+  let tweenRot1 = new TWEEN.Tween({ rotY: glt_model.rotation.y }).to(
+    { rotY: Math.PI },
+    1000
+  ); // 设置旋转动画内容， 0.4s
+  tweenRot1.onUpdate(function (object) {
+    // console.log(glt_model.rotation.y, object.rotY);
+    glt_model.rotation.y = object.rotY;
+  });
+  let tweenB = new TWEEN.Tween(glt_model.position)
+    .to({ x: -10, y: 2, z: 0 }, 10000) // 在 8 秒内移动到 position
+    .easing(TWEEN.Easing.Quadratic.InOut); // 使用缓动函数使动画流畅。;
+  // 链接多个动画
+  tweenA.chain(tweenRot1);
+  tweenRot1.chain(tweenB);
+  tweenB.chain(tweenA);
+};
+
+const updateRot = function (object, elapsed) {};
+
+//管道体
+// const tubeGeometry = new THREE.TubeGeometry(curve, 101, 2, 30); // 101取点数 2为r 30为三角切面数
+// const tubeMesh = new THREE.Mesh(
+//   tubeGeometry,
+//   new THREE.MeshBasicMaterial({
+//     color: "#00aa00",
+//     side: THREE.DoubleSide,
+//     wireframe: true,
+//   })
+// );
+// scene.add(tubeMesh);
 </script>
 
 <style lang="scss" scoped>

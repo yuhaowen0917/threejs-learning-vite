@@ -1,6 +1,5 @@
 <template>
-  <div class="test-three" ref="vectorModule">
-  </div>
+  <div class="test-three" ref="vectorModule"></div>
 </template>
   
 <script setup>
@@ -94,9 +93,9 @@ const group = new THREE.Group();
 group.add(cubeA);
 group.add(cubeB);
 console.log(group);
-group.position.y = 2
+group.position.y = 2;
 
-scene.add( group );
+scene.add(group);
 
 scene.add(cube);
 
@@ -108,10 +107,9 @@ const render = () => {
   // 渲染场景
   renderer.render(scene, camera);
   // 旋转变换
-  cube.rotation.x += 0.01
+  cube.rotation.x += 0.01;
   // 引擎自动更新渲染器
   requestAnimationFrame(render);
-  
 };
 
 // 创建轨道控制器

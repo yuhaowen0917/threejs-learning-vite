@@ -57,9 +57,9 @@ scene.add(camera);
 
 // 创建纹理
 const texture = new THREE.TextureLoader().load("src/assets/textures/01.png");
-// texture.wrapS = THREE.RepeatWrapping;
-// texture.wrapT = THREE.RepeatWrapping;
-// texture.repeat.set(4, 4);
+texture.wrapS = THREE.RepeatWrapping;
+texture.wrapT = THREE.RepeatWrapping;
+texture.repeat.set(4, 4);
 
 // 创建立体纹理
 const loader = new THREE.CubeTextureLoader();
@@ -83,8 +83,8 @@ console.log(geometry);
 // 材质
 const material = new THREE.MeshBasicMaterial({
   color: 0x00ff00,
-  // map: texture,
-  envMap: textureCube,
+  map: texture, // 颜色贴图
+  envMap: textureCube, // 环境贴图
 });
 
 // 网格
@@ -116,6 +116,7 @@ const render = () => {
   // cube.position.x += 0.01;
   cube.material.color = new THREE.Color(controlData.color);
   material.wireframe = controlData.wireframe;
+  controls.update(); // 自动旋转 得加上这个
 };
 
 // 创建轨道控制器
@@ -128,11 +129,12 @@ const controls = new OrbitControls(camera, renderer.domElement);
 // 设置控制器阻尼，是控制器效果更真实，必须在动画循环里调用.update()
 controls.enableDamping = false;
 controls.dampingFactor = 0.01;
+// 自动旋转
+// controls.autoRotate = true; // 是否自动旋转
+// controls.autoRotateSpeed = 0.5; // 围绕目标旋转的速度将有多快
 controls.update();
 
-// 自动旋转
-controls.autoRotate = true;
-controls.autoRotateSpeed = 0.5;
+
 
 // 加入辅助轴，帮助我们查看3维坐标轴
 const axesHelper = new THREE.AxesHelper(4);
