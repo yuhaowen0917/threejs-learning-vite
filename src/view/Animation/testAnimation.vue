@@ -371,8 +371,9 @@ const moveAnimationFrame = () => {
     { rotY: Math.PI },
     1000
   ); // 设置旋转动画内容， 0.4s
-  tweenRot1.onUpdate(function (object) {
-    // console.log(glt_model.rotation.y, object.rotY);
+  // 在tween每次被更新后执行。
+  tweenRot1.onUpdate(function (object, elapsed) {
+    // console.log(glt_model.rotation.y, object, elapsed);
     glt_model.rotation.y = object.rotY;
   });
   let tweenB = new TWEEN.Tween(glt_model.position)
