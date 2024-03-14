@@ -15,8 +15,11 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import Stats from "three/addons/libs/stats.module.js";
 
 import * as TWEEN from "@tweenjs/tween.js";
-// 指针控制器
-// import { PointerLockControls } from "three/addons/controls/PointerLockControls.js";
+// 导入动画库
+import gsap from "gsap";
+
+// 导入 dat.gui
+import * as dat from "dat.gui";
 
 // 性能监视器
 const stats = new Stats();
@@ -49,7 +52,7 @@ const camera = new THREE.PerspectiveCamera(
 );
 
 // 初始化相机位置
-camera.position.set(-2, 2, 5);
+camera.position.set(-5, 10, 15);
 camera.aspect = window.innerWidth / window.innerHeight;
 camera.lookAt(camera.position); //指相机看向三维中的某个位置
 // 更新摄像头矩阵
@@ -129,40 +132,56 @@ const material = new THREE.MeshPhysicalMaterial({
 // 创建GLTF实例
 const loader = new GLTFLoader();
 // 加载模型
-let mixer = null;
 // 飞行器动画模型
 const percentage = ref(0);
 let glt_model;
 let glt_model_child;
 loader.load(
-  "./models/glbModels/buster_drone.glb",
+  "./models/robotic_arm/robotic_arm.glb",
   (glb) => {
     console.log("glb", glb);
+
+    glt_model = glb.scene;
+    glt_model.scale.set(0.5, 0.5, 0.5);
+    glt_model.position.set(5, 0, 0);
+    glt_model.rotation.y = Math.PI / 4;
+
     // 遍历模型中的物体
     glb.scene.traverse((child) => {
       if (child.isMesh) {
-        if (child.name === "F_P7_leg_0") {
-          child.material = new THREE.MeshPhongMaterial({
-            color: 0xff1100,
-          });
+        // console.log(child);
+        if (child.name === "_polySurface260_Base_Del_0") {
           glt_model_child = child;
-          glt_model_child.material.visible = isFootVisible.value; // 控制模型显示隐藏
-          console.log(glt_model_child.material);
+          console.log(glt_model_child);
+          child.material = new THREE.MeshPhongMaterial({
+            color: 0xffff00,
+            shininess: 1000,
+          });
+        }
+        if (child.name === "_curve15polySurface246_Base_Del_0") {
+          child.material = new THREE.MeshLambertMaterial({
+            color: 0xfaafbb,
+          });
+        }
+        if (child.name === "_curve15polySurface247_Base_Del_0") {
+          child.material = new THREE.MeshLambertMaterial({
+            color: 0x0aafbb,
+          });
+        }
+        if (child.name === "polySurface654_Base_Del_0") {
+          console.log(child.material);
+          child.material = new THREE.MeshPhysicalMaterial({
+            color: 0x00ff00,
+            metalness: 1.0,
+            roughness: 0.5,
+            clearcoat: 1.0,
+            clearcoatRoughness: 0.05,
+            // clearcoatNormalScale: 0.1
+          });
         }
       }
     });
-    glt_model = glb.scene;
-    glt_model.scale.set(1, 1, 1);
-    glt_model.position.set(0, 1, 0);
-    glt_model.rotation.y = Math.PI / 4;
-    // moveAnimationFrame();
-    // mixer = new THREE.AnimationMixer(glb.scene);
-    // // 这个方法会返回一个AnimationAction
-    // const action = mixer.clipAction(glb.animations[0]);
-    // // 使用play()方法调用这个AnimationAction
-    // action.play();
-
-    // mixer = startAnimation(glb.scene, glb.animations, glb.animations[0].name);
+    tweenAnimation(glb.scene);
 
     scene.add(glb.scene);
   },
@@ -201,15 +220,9 @@ const tick = () => {
   const deltaTime = elapsedTime - previousTime;
   previousTime = elapsedTime;
 
-  // Update mixer
-  if (mixer !== null) {
-    mixer.update(deltaTime);
-  }
-
   // Render
   renderer.render(scene, camera);
 
-  // Call tick again on the next frame
   window.requestAnimationFrame(tick);
 };
 
@@ -228,9 +241,9 @@ document.addEventListener("click", (event) => {
   const intersects = raycaster.intersectObjects(scene.children);
   if (intersects.length > 0) {
     // 射线涉及到的物体集合
-    console.log(intersects);
-    // console.log(intersects[0].object.name);
-    // intersects[0].object.position.x += 10;
+    console.log(intersects[0].object.name);
+    // intersects[0].object.rotation.x += (10 * Math.PI) / 180;
+    // Drone_Turb_M_L_body_0
     // for (let i = 0; i < intersects.length; i++) {
     //   intersects[i].object.material.color.set(0xff0000);
     //   intersects[i].object.rotation.x += (10 * Math.PI) / 180;
@@ -304,15 +317,93 @@ const moveAnimationFrame = () => {
 const isFootVisible = ref(true);
 const event = () => {
   isFootVisible.value = !isFootVisible.value;
-  glt_model_child.material.visible = isFootVisible.value;
-  console.log("1");
+  // glt_model_child.material.visible = isFootVisible.value;
+};
+
+// GUI界面
+const controlData = {
+  bgcolor: "#666666",
+  x: 0,
+  y: 0,
+  z: 0,
+  rotation: 0,
+  visible: true,
+};
+const gui = new dat.GUI();
+gui.domElement.id = "gui_box";
+const folder = gui.addFolder("配置");
+folder.addColor(controlData, "bgcolor").onFinishChange((value) => {
+  // console.log("停止修改之后，最终确定的值：", value);
+  scene.background = new THREE.Color(value);
+});
+folder.add(controlData, "x", -10, 10).onChange((value) => {
+  glt_model.position.x = value;
+});
+folder.add(controlData, "y", -10, 10).onChange((value) => {
+  glt_model.position.y = value;
+});
+folder.add(controlData, "z", -10, 10).onChange((value) => {
+  glt_model.position.z = value;
+});
+folder.add(controlData, "rotation", -10, 10).onChange((value) => {
+  glt_model.rotation.y = value;
+});
+folder.add(controlData, "visible").name("某一组件是否显示");
+
+folder.open();
+
+// 移动动画效果
+const tweenAnimation = (model) => {
+  let childModel_1;
+  model.traverse((child) => {
+    if (child.isMesh) {
+      // console.log(child);
+      if (child.name === "polySurface654_Base_Del_0") {
+        childModel_1 = child;
+        console.log(childModel_1);
+      }
+    }
+  });
+  // 动画效果
+  let tweenA = new TWEEN.Tween(model.position)
+    .to({ x: 15, y: 0, z: 0 }, 7000) // 在 8 秒内移动到 position
+    .easing(TWEEN.Easing.Linear.None) // 使用缓动函数使动画流畅。;
+    .start();
+  tweenA.onComplete(function () {
+    // glt_model.rotation.x = Math.PI / 2; //将模型摆正
+  });
+  tweenA.onUpdate(function (object, elapsed) {
+    // console.log(object);
+    glt_model.rotation.y = object.x;
+    // childModel_1.rotation.x  = object.x;
+    // childModel_1.rotateX(object.x);
+  });
+  let tweenB = new TWEEN.Tween(model.position)
+    .to({ x: 5, y: 0, z: 0 }, 7000)
+    .easing(TWEEN.Easing.Cubic.Out); // 使用缓动函数使动画流畅。;
+  let tweenC = new TWEEN.Tween(model.position)
+    .to({ x: 5, y: 0, z: 0 }, 7000)
+    .easing(TWEEN.Easing.Linear.None);
+  tweenC.onUpdate(function (object, elapsed) {
+    // console.log(object);
+    glt_model.rotateY(Math.PI / 60);
+  });
+  // 链接多个动画
+  tweenA.chain(tweenB);
+  tweenB.chain(tweenC);
+  tweenC.chain(tweenA);
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 .btn-box {
   position: absolute;
   bottom: 10%;
   left: 10%;
+}
+#gui_box {
+  position: absolute;
+  right: 0;
+  width: 300px;
 }
 </style>

@@ -150,6 +150,7 @@ loader.load(
     console.log("glb", glb);
     // 遍历模型中的物体
     glb.scene.traverse((child) => {
+      // console.log(child);
       if (child.isMesh) {
         if (child.name === "F_P7_leg_0") {
           child.material = new THREE.MeshPhongMaterial({
@@ -157,7 +158,7 @@ loader.load(
           });
           glt_model_child = child;
           glt_model_child.material.visible = isFootVisible.value; // 控制模型显示隐藏
-          console.log(glt_model_child.material);
+          // console.log(glt_model_child.material);
         }
       }
     });
@@ -412,7 +413,6 @@ const isFootVisible = ref(true);
 const event = () => {
   isFootVisible.value = !isFootVisible.value;
   glt_model_child.material.visible = isFootVisible.value;
-  console.log("1");
 };
 </script>
 
