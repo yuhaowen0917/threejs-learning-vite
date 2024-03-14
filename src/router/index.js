@@ -55,6 +55,12 @@ const routes = [
     component: () => import("../view/Animation/testAnimation.vue"),
     meta: { desc: "测试动画模型的效果" },
   },
+  {
+    path: "/debug-actions",
+    name: "debugActions",
+    component: () => import("../view/Animation/debugActions.vue"),
+    meta: { desc: "调试动作" },
+  },
 ];
 
 const router = createRouter({

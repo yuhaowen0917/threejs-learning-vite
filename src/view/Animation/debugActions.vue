@@ -1,15 +1,5 @@
 <template>
   <div class="test-three" ref="testModels"></div>
-  <!-- 模型加载进度条效果 v-show v-if -->
-  <!-- <div
-    style="position: absolute; left: 10%; bottom: 10%; z-index: 99; width: 20%"
-  >
-    <el-progress
-      :text-inside="true"
-      :stroke-width="20"
-      :percentage="percentage"
-    />
-  </div> -->
   <div class="btn-box">
     <button @click="event">相机移动</button>
   </div>
@@ -59,7 +49,7 @@ const camera = new THREE.PerspectiveCamera(
 );
 
 // 初始化相机位置
-camera.position.set(-5, 15, 20);
+camera.position.set(-2, 2, 5);
 camera.aspect = window.innerWidth / window.innerHeight;
 camera.lookAt(camera.position); //指相机看向三维中的某个位置
 // 更新摄像头矩阵
@@ -163,8 +153,8 @@ loader.load(
     });
     glt_model = glb.scene;
     glt_model.scale.set(1, 1, 1);
-    glt_model.position.set(-10, 2, 0);
-    glt_model.rotation.y = (Math.PI / 4) * 3;
+    glt_model.position.set(0, 1, 0);
+    glt_model.rotation.y = Math.PI / 4;
     // moveAnimationFrame();
     // mixer = new THREE.AnimationMixer(glb.scene);
     // // 这个方法会返回一个AnimationAction
@@ -201,64 +191,6 @@ function startAnimation(skinnedMesh, animations, animationName) {
   return m_mixer;
 }
 
-// dragon
-let mixer2 = null;
-// loader.load(
-//   "./models/glbModels/tarisland_dragon_poly.glb",
-//   (glb) => {
-//     console.log("dragon glb", glb);
-//     // 遍历模型中的物体
-//     // glb.scene.traverse((child) => {
-//     //   if (child.isMesh) {
-//     //     console.log(child);
-//     //   }
-//     // });
-//     glb.scene.scale.set(0.1, 0.1, 0.1);
-//     glb.scene.position.set(10, 0, 0);
-
-//     mixer2 = new THREE.AnimationMixer(glb.scene);
-
-//     // 播放所有动画的方法
-//     // const actions = glb.animations;
-//     // actions.forEach(function (clip) {
-//     //   // console.log(clip);
-//     //   mixer2.clipAction(clip).play();
-//     // });
-//   },
-//   (xhr) => {
-//     // 加载进度
-//     const percent = xhr.loaded / xhr.total;
-//     percentage.value = Number((percent * 100).toFixed());
-//     // console.log("加载进度" + percent);
-//   }
-// );
-
-// 鳄鱼
-let mixer1 = null;
-// loader.load(
-//   "./models/glbModels/low_poly_fox.glb",
-//   (glb) => {
-//     console.log("glb", glb);
-//     // 遍历模型中的物体
-//     // glb.scene.traverse((child) => {
-//     //   if (child.isMesh) {
-//     //     console.log(child);
-//     //   }
-//     // });
-//     glb.scene.scale.set(0.1, 0.1, 0.1);
-//     glb.scene.position.set(-15, 0, -1);
-//     // glb.scene.rotation.y = 0.25 * Math.PI;
-
-//     scene.add(glb.scene);
-
-//   },
-//   (xhr) => {
-//     // 加载进度
-//     const percent = xhr.loaded / xhr.total;
-//     // console.log("加载进度" + percent);
-//   }
-// );
-
 // 动画函数
 const clock = new THREE.Clock();
 let previousTime = 0;
@@ -272,12 +204,6 @@ const tick = () => {
   // Update mixer
   if (mixer !== null) {
     mixer.update(deltaTime);
-  }
-  if (mixer1 !== null) {
-    mixer1.update(deltaTime);
-  }
-  if (mixer2 !== null) {
-    mixer2.update(deltaTime);
   }
 
   // Render
@@ -313,27 +239,6 @@ document.addEventListener("click", (event) => {
     // }
   }
 });
-
-// 创建轨迹
-const curve = new THREE.CatmullRomCurve3([
-  new THREE.Vector3(-10, 0, 10),
-  new THREE.Vector3(-5, 5, 5),
-  new THREE.Vector3(0, 0, 0),
-  new THREE.Vector3(5, -5, 5),
-  new THREE.Vector3(10, 0, 10),
-  new THREE.Vector3(10, 5, 10),
-]);
-curve.curveType = "centripetal";
-curve.closed = true; //设置是否闭环
-curve.tension = 0.5;
-// console.log(curve);
-
-// 创建轨迹线
-// const points = curve.getPoints(100);
-// const geometry = new THREE.BufferGeometry().setFromPoints(points);
-// const material1 = new THREE.LineBasicMaterial({ color: 0xaaffee });
-// const curveObject = new THREE.Line(geometry, material1);
-// scene.add(curveObject);
 
 let i = 1;
 const moveAnimationFrame = () => {
@@ -395,18 +300,6 @@ const moveAnimationFrame = () => {
   tweenRot1.chain(tweenB);
   tweenB.chain(tweenA);
 };
-
-//管道体
-// const tubeGeometry = new THREE.TubeGeometry(curve, 101, 2, 30); // 101取点数 2为r 30为三角切面数
-// const tubeMesh = new THREE.Mesh(
-//   tubeGeometry,
-//   new THREE.MeshBasicMaterial({
-//     color: "#00aa00",
-//     side: THREE.DoubleSide,
-//     wireframe: true,
-//   })
-// );
-// scene.add(tubeMesh);
 
 const isFootVisible = ref(true);
 const event = () => {
