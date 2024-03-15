@@ -129,15 +129,6 @@ scene.add(point_light);
 // point_light_1.castShadow = true;
 // scene.add(point_light_1);
 
-// 材质
-const material = new THREE.MeshPhysicalMaterial({
-  //   color: 0x727272,
-  metalness: 1.0,
-  roughness: 0.5,
-  clearcoat: 1.0,
-  clearcoatRoughness: 0.05,
-});
-
 // 动画函数
 const clock = new THREE.Clock();
 let previousTime = 0;
@@ -184,13 +175,9 @@ const stlloader = new STLLoader();
 const initStlModels = () => {
   stlloader.load("./models/workModels/base.stl", function (stl) {
     console.log("stl", stl);
-    var material = new THREE.MeshLambertMaterial({
-      color: 0x000fff,
-    }); //材质对象Material
+    var material = baseMaterial;
     var mesh = new THREE.Mesh(stl, material); //网格模型对象Mesh
     mesh.rotation.x = -0.5 * Math.PI; //将模型摆正
-    mesh.scale.set(0.01, 0.01, 0.01); //缩放
-    // mesh.position.set(10, 10, 15);
     // 物体接收光源
     mesh.receiveShadow = true;
     // 物体投射光源
@@ -199,16 +186,10 @@ const initStlModels = () => {
   });
   stlloader.load("./models/workModels/j1.stl", function (stl) {
     console.log("stl", stl);
-    var material = new THREE.MeshLambertMaterial({
-      color: 0x0fffff,
-    }); //材质对象Material
-    var mesh = new THREE.Mesh(stl, material); //网格模型对象Mesh
-    mesh.rotation.x = -0.5 * Math.PI; //将模型摆正
-    mesh.scale.set(0.01, 0.01, 0.01); //缩放
-    // mesh.position.set(10, 10, 15);
-    // 物体接收光源
+    var material = j1Material; 
+    var mesh = new THREE.Mesh(stl, material);
+    mesh.rotation.x = -0.5 * Math.PI;
     mesh.receiveShadow = true;
-    // 物体投射光源
     mesh.castShadow = true;
     scene.add(mesh);
   });
@@ -219,8 +200,6 @@ const initStlModels = () => {
     });
     var mesh = new THREE.Mesh(stl, material); //网格模型对象Mesh
     mesh.rotation.x = -0.5 * Math.PI; //将模型摆正
-    mesh.scale.set(0.01, 0.01, 0.01); //缩放
-    // mesh.position.set(10, 10, 15);
     // 物体接收光源
     mesh.receiveShadow = true;
     // 物体投射光源
