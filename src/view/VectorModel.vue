@@ -46,7 +46,7 @@ window.addEventListener("resize", () => {
 // 创建立方体
 const geometry = new THREE.BoxGeometry(2, 2, 2);
 // const geometry = new THREE.SphereGeometry(3, 32, 16);
-console.log(geometry);
+// console.log(geometry);
 
 // 创建基础网格材质
 const material = new THREE.MeshBasicMaterial({
@@ -59,7 +59,7 @@ console.log(vector);
 
 // Mesh网格
 const cube = new THREE.Mesh(geometry, material);
-console.log(cube);
+// console.log(cube);
 cube.position.set(1, 1, 1);
 cube.position.add(vector); // 相加
 // cube.position.x = 1;
@@ -72,6 +72,7 @@ cube.scale.set(2, 3, 1);
 
 // 平移
 cube.translateX(1);
+scene.add(cube);
 
 // 显示与隐藏
 // cube.visible = true;
@@ -87,8 +88,6 @@ cubeA.position.set(1, 1, -1);
 const cubeB = new THREE.Mesh(geometry, material);
 cubeB.position.set(-1, -1, 1);
 
-//create a group and add the two cubes
-//These cubes can now be rotated / scaled etc as a group
 const group = new THREE.Group();
 group.add(cubeA);
 group.add(cubeB);
@@ -96,8 +95,7 @@ console.log(group);
 group.position.y = 2;
 
 scene.add(group);
-
-scene.add(cube);
+console.log(scene);
 
 // 添加网格地面
 const gridHelper = new THREE.GridHelper(20, 20);

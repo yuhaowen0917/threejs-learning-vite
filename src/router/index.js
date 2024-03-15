@@ -61,6 +61,12 @@ const routes = [
     component: () => import("../view/Animation/debugActions.vue"),
     meta: { desc: "调试动作" },
   },
+  {
+    path: "/works",
+    name: "WorksModel",
+    component: () => import("../view/work/index.vue"),
+    meta: { desc: "WorksModel" },
+  },
 ];
 
 const router = createRouter({
