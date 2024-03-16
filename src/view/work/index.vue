@@ -263,6 +263,8 @@ let j5_model;
 const j5_model_group = new THREE.Object3D();
 j5_model_group.name = "j5_model_group";
 let j6_model;
+const j6_model_group = new THREE.Object3D();
+j6_model_group.name = "j6_model_group";
 let j6Material = new THREE.MeshStandardMaterial({
   color: 0x2e2e2e,
 });
@@ -349,8 +351,7 @@ const initGtlModels = () => {
     j3_model_group.add(j4_model_group);
   });
   gltfloader.load("./models/workModels/j5.glb", function (glb) {
-    // console.log("glb", glb);
-    glb.scene.position.set(0, 0, 0);
+    // glb.scene.position.set(0, 0, 0);
     glb.scene.name = "j5_model";
     j5_model = glb.scene;
 
@@ -365,10 +366,12 @@ const initGtlModels = () => {
         child.material = j6Material;
       }
     });
+    glb.scene.name = "j6_model";
     j6_model = glb.scene;
     glb.scene.position.set(0, 0, 0);
 
-    j5_model_group.add(j6_model.clone());
+    j6_model_group.add(j6_model.clone());
+    j5_model_group.add(j6_model_group);
   });
   console.log(group);
   roboticArmModel = group;
@@ -415,7 +418,7 @@ const initGuiBox = () => {
     .add(controlData, "visible")
     .name("visible")
     .onFinishChange((value) => {
-      j1_model.visible = value;
+      j1_model_group.children[0].visible = value;
     });
   j1_folder.add(controlData, "rotation", -10, 10).onChange((value) => {
     j1_model_group.rotation.y = value;
@@ -428,8 +431,11 @@ const initGuiBox = () => {
     .add(controlData, "visible")
     .name("visible")
     .onFinishChange((value) => {
-      j2_model.visible = value;
+      j2_model_group.children[0].visible = value;
     });
+  j2_folder.add(controlData, "rotation", -10, 10).onChange((value) => {
+    j2_model_group.rotation.z = value;
+  });
   const j3_folder = gui.addFolder("j3");
   j3_folder.addColor(controlData, "color").onChange((value) => {
     j3Material.color.set(value);
@@ -438,9 +444,51 @@ const initGuiBox = () => {
     .add(controlData, "visible")
     .name("visible")
     .onFinishChange((value) => {
-      j3_model.visible = value;
+      j3_model_group.children[0].visible = value;
     });
+  j3_folder.add(controlData, "rotation", -10, 10).onChange((value) => {
+    j3_model_group.rotation.z = value;
+  });
   // j3_folder.open();
+  const j4_folder = gui.addFolder("j4");
+  j4_folder.addColor(controlData, "color").onChange((value) => {
+    j4Material.color.set(value);
+  });
+  j4_folder
+    .add(controlData, "visible")
+    .name("visible")
+    .onFinishChange((value) => {
+      j4_model_group.children[0].visible = value;
+    });
+  j4_folder.add(controlData, "rotation", -10, 10).onChange((value) => {
+    j4_model_group.rotation.x = value;
+  });
+  const j5_folder = gui.addFolder("j5");
+  j5_folder.addColor(controlData, "color").onChange((value) => {
+    j5Material.color.set(value);
+  });
+  j5_folder
+    .add(controlData, "visible")
+    .name("visible")
+    .onFinishChange((value) => {
+      j5_model_group.children[0].visible = value;
+    });
+  j5_folder.add(controlData, "rotation", -10, 10).onChange((value) => {
+    j5_model_group.rotation.z = value;
+  });
+  const j6_folder = gui.addFolder("j6");
+  j6_folder.addColor(controlData, "color").onChange((value) => {
+    j6Material.color.set(value);
+  });
+  j6_folder
+    .add(controlData, "visible")
+    .name("visible")
+    .onFinishChange((value) => {
+      j6_model_group.children[0].visible = value;
+    });
+  j6_folder.add(controlData, "rotation", -10, 10).onChange((value) => {
+    j6_model_group.rotation.x = value;
+  });
   const overall_folder = gui.addFolder("overall");
   overall_folder.add(controlData, "rotation", -10, 10).onChange((value) => {
     roboticArmModel.rotation.y = value;
