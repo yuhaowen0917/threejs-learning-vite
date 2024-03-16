@@ -55,7 +55,7 @@ const camera = new THREE.PerspectiveCamera(
 );
 
 // 初始化相机位置
-camera.position.set(500, 1700, 1500);
+camera.position.set(600, 1500, 2000);
 camera.aspect = window.innerWidth / window.innerHeight;
 camera.lookAt(camera.position); //指相机看向三维中的某个位置
 // 更新摄像头矩阵
@@ -186,7 +186,7 @@ const initStlModels = () => {
   });
   stlloader.load("./models/workModels/j1.stl", function (stl) {
     console.log("stl", stl);
-    var material = j1Material; 
+    var material = j1Material;
     var mesh = new THREE.Mesh(stl, material);
     mesh.rotation.x = -0.5 * Math.PI;
     mesh.receiveShadow = true;
@@ -220,6 +220,8 @@ let baseMaterial = new THREE.MeshPhysicalMaterial({
   clearcoatNormalScale: 0.1,
 });
 let j1_model;
+const j1_model_group = new THREE.Object3D();
+j1_model_group.name = "j1_model_group";
 let j1Material = new THREE.MeshPhysicalMaterial({
   color: 0x00ff00,
   metalness: 1.0,
@@ -229,11 +231,15 @@ let j1Material = new THREE.MeshPhysicalMaterial({
   // clearcoatNormalScale: 0.1
 });
 let j2_model;
+const j2_model_group = new THREE.Object3D();
+j2_model_group.name = "j2_model_group";
 let j2Material = new THREE.MeshPhongMaterial({
   color: 0xcd39cd,
   shininess: 1000,
 });
 let j3_model;
+const j3_model_group = new THREE.Object3D();
+j3_model_group.name = "j3_model_group";
 let j3Material = new THREE.MeshPhysicalMaterial({
   color: 0xdd0d0d,
   metalness: 1.0,
@@ -243,6 +249,8 @@ let j3Material = new THREE.MeshPhysicalMaterial({
   clearcoatNormalScale: 0.1,
 });
 let j4_model;
+const j4_model_group = new THREE.Object3D();
+j4_model_group.name = "j4_model_group";
 let j4Material = new THREE.MeshPhysicalMaterial({
   color: 0xffeeff,
   metalness: 1.0,
@@ -252,14 +260,16 @@ let j4Material = new THREE.MeshPhysicalMaterial({
   clearcoatNormalScale: 0.1,
 });
 let j5_model;
+const j5_model_group = new THREE.Object3D();
+j5_model_group.name = "j5_model_group";
 let j6_model;
 let j6Material = new THREE.MeshStandardMaterial({
   color: 0x2e2e2e,
 });
+let roboticArmModel;
+const groupModels = new THREE.Group(); //实例化一个THREE.Object3D对象
+groupModels.name = "robotic-arm";
 const initGtlModels = () => {
-  const group = new THREE.Group(); //实例化一个THREE.Object3D对象
-  group.name = "robotic-arm";
-
   gltfloader.load("./models/workModels/base.glb", function (glb) {
     // console.log("glb", glb);
     glb.scene.traverse((child) => {
@@ -273,7 +283,7 @@ const initGtlModels = () => {
     glb.scene.name = "base_model";
     base_model = glb.scene;
     // scene.add(glb.scene);
-    group.add(base_model);
+    groupModels.add(base_model);
   });
   gltfloader.load("./models/workModels/j1.glb", function (glb) {
     // console.log("glb", glb);
@@ -287,8 +297,17 @@ const initGtlModels = () => {
     glb.scene.position.set(0, 0, 0);
     glb.scene.name = "j1_model";
     j1_model = glb.scene;
-    // scene.add(glb.scene);
-    group.add(j1_model);
+    // console.log(glb.scene, new THREE.Mesh(glb.scene));
+    groupModels.add(j1_model);
+
+    // const part = new THREE.Mesh(j1_model);
+    const part1 = new THREE.Mesh(new THREE.BoxGeometry(200, 20, 400));
+    const part2 = new THREE.Mesh(new THREE.BoxGeometry(500, 755, 400));
+    part1.position.x = 500;
+    part2.position.x = -500;
+    // j1_model_group.add(part)
+    j1_model_group.add(part1).add(part2);
+    groupModels.add(j1_model_group);
   });
   gltfloader.load("./models/workModels/j2.glb", function (glb) {
     // console.log("glb", glb);
@@ -302,7 +321,7 @@ const initGtlModels = () => {
     glb.scene.name = "j2_model";
     j2_model = glb.scene;
     // scene.add(glb.scene);
-    group.add(j2_model);
+    groupModels.add(j2_model);
   });
   gltfloader.load("./models/workModels/j3.glb", function (glb) {
     // console.log("glb", glb);
@@ -316,7 +335,7 @@ const initGtlModels = () => {
     glb.scene.name = "j3_model";
     j3_model = glb.scene;
     // scene.add(glb.scene);
-    group.add(j3_model);
+    groupModels.add(j3_model);
   });
   gltfloader.load("./models/workModels/j4.glb", function (glb) {
     // console.log("glb", glb);
@@ -330,7 +349,7 @@ const initGtlModels = () => {
     j4_model = glb.scene;
     // scene.add(glb.scene);
     glb.scene.name = "j4_model";
-    group.add(j4_model);
+    groupModels.add(j4_model);
   });
   gltfloader.load("./models/workModels/j5.glb", function (glb) {
     // console.log("glb", glb);
@@ -338,7 +357,7 @@ const initGtlModels = () => {
     glb.scene.name = "j5_model";
     j5_model = glb.scene;
     // scene.add(glb.scene);
-    group.add(j5_model);
+    groupModels.add(j5_model);
   });
   gltfloader.load("./models/workModels/j6.glb", function (glb) {
     // console.log("glb", glb);
@@ -351,9 +370,18 @@ const initGtlModels = () => {
     j6_model = glb.scene;
     glb.scene.position.set(0, 0, 0);
     // scene.add(glb.scene);
-    group.add(j6_model);
+    groupModels.add(j6_model);
   });
-  scene.add(group); //将对象组添加到场景当中
+  // console.log(groupModels);
+  roboticArmModel = groupModels;
+  // group 整体进行操作
+  // group.rotation.y -= Math.PI / 2;
+  // group.position.set(0, 1, 0);
+
+  scene.add(groupModels); //将对象组添加到场景当中
+
+  // 模型分组
+  // ModelsNested();
 };
 
 // GUI界面
@@ -380,7 +408,25 @@ const initGuiBox = () => {
     .onFinishChange((value) => {
       base_model.visible = value;
     });
-  base_folder.open();
+  // base_folder.open();
+  const j1_folder = gui.addFolder("j1");
+  j1_folder.addColor(controlData, "color").onChange((value) => {
+    j1Material.color.set(value);
+  });
+  j1_folder
+    .add(controlData, "visible")
+    .name("visible")
+    .onFinishChange((value) => {
+      j1_model.visible = value;
+    });
+  j1_folder.add(controlData, "rotation", -10, 10).onChange((value) => {
+    j1_model_group.rotation.y = value;
+    // j1_model.rotation.y = value;
+    // j2_model.rotation.y = value;
+    // j3_model.rotation.y = value;
+    // j4_model.rotation.y = value;
+    // j5_model.rotation.y = value;
+  });
   const j2_folder = gui.addFolder("j2");
   j2_folder.addColor(controlData, "color").onChange((value) => {
     j2Material.color.set(value);
@@ -391,11 +437,6 @@ const initGuiBox = () => {
     .onFinishChange((value) => {
       j2_model.visible = value;
     });
-  // j2_folder.add(controlData, "rotation", -10, 10).onChange((value) => {
-  //   j2_model.rotation.y = value;
-  //   // j2_model.rotateY(value);
-  // });
-  j2_folder.open();
   const j3_folder = gui.addFolder("j3");
   j3_folder.addColor(controlData, "color").onChange((value) => {
     j3Material.color.set(value);
@@ -406,11 +447,29 @@ const initGuiBox = () => {
     .onFinishChange((value) => {
       j3_model.visible = value;
     });
-  j3_folder.open();
+  // j3_folder.open();
   const overall_folder = gui.addFolder("overall");
+  overall_folder.add(controlData, "rotation", -10, 10).onChange((value) => {
+    roboticArmModel.rotation.y = value;
+  });
+  overall_folder.add(controlData, "x", -400, 400).onChange((value) => {
+    roboticArmModel.position.x = value;
+  });
 };
 
 console.log(scene);
+
+// 模型分组嵌套
+const ModelsNested = () => {
+  const part = new THREE.Mesh(j1_model);
+  const part1 = new THREE.Mesh(new THREE.BoxGeometry(200, 20, 400));
+  const part2 = new THREE.Mesh(new THREE.BoxGeometry(500, 755, 400));
+  part1.position.x = 500;
+  part2.position.x = -500;
+  j1_model_group.add(part).add(part1).add(part2);
+  groupModels.add(j1_model_group);
+  console.log(j1_model_group);
+};
 </script>
   
 <style lang="scss">
