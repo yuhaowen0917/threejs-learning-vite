@@ -74,3 +74,17 @@ document.addEventListener("click", (event) => {
 ### 机械臂连杆运动逻辑 连动 牵一发而动全身
 将所有子模型合并在一个对象中 或者一个分组内
 将连动的模型也可以合并在一起
+
+```
+// 模型分组嵌套 错误代码
+const ModelsNested = () => {
+  const part = new THREE.Mesh(j1_model); // // 将 new THREE.Mesh(j1_model) 改为 j1_model.clone()，
+  const part1 = new THREE.Mesh(new THREE.BoxGeometry(200, 20, 400));
+  const part2 = new THREE.Mesh(new THREE.BoxGeometry(500, 755, 400));
+  part1.position.x = 500;
+  part2.position.x = -500;
+  j1_model_group.add(part).add(part1).add(part2);
+  groupModels.add(j1_model_group);
+  console.log(j1_model_group);
+};
+```

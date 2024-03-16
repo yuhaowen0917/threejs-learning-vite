@@ -298,15 +298,9 @@ const initGtlModels = () => {
     glb.scene.name = "j1_model";
     j1_model = glb.scene;
     // console.log(glb.scene, new THREE.Mesh(glb.scene));
-    groupModels.add(j1_model);
+    // groupModels.add(j1_model);
 
-    // const part = new THREE.Mesh(j1_model);
-    const part1 = new THREE.Mesh(new THREE.BoxGeometry(200, 20, 400));
-    const part2 = new THREE.Mesh(new THREE.BoxGeometry(500, 755, 400));
-    part1.position.x = 500;
-    part2.position.x = -500;
-    // j1_model_group.add(part)
-    j1_model_group.add(part1).add(part2);
+    j1_model_group.add(j1_model.clone());
     groupModels.add(j1_model_group);
   });
   gltfloader.load("./models/workModels/j2.glb", function (glb) {
@@ -320,8 +314,9 @@ const initGtlModels = () => {
     glb.scene.position.set(0, 0, 0);
     glb.scene.name = "j2_model";
     j2_model = glb.scene;
-    // scene.add(glb.scene);
-    groupModels.add(j2_model);
+    // groupModels.add(j2_model);
+    j2_model_group.add(j2_model.clone());
+    j1_model_group.add(j2_model_group);
   });
   gltfloader.load("./models/workModels/j3.glb", function (glb) {
     // console.log("glb", glb);
@@ -335,7 +330,10 @@ const initGtlModels = () => {
     glb.scene.name = "j3_model";
     j3_model = glb.scene;
     // scene.add(glb.scene);
-    groupModels.add(j3_model);
+    // groupModels.add(j3_model);
+
+    j3_model_group.add(j3_model.clone());
+    j2_model_group.add(j3_model_group);
   });
   gltfloader.load("./models/workModels/j4.glb", function (glb) {
     // console.log("glb", glb);
@@ -347,17 +345,18 @@ const initGtlModels = () => {
     });
     glb.scene.position.set(0, 0, 0);
     j4_model = glb.scene;
-    // scene.add(glb.scene);
     glb.scene.name = "j4_model";
-    groupModels.add(j4_model);
+    j4_model_group.add(j4_model.clone());
+    j3_model_group.add(j4_model_group);
   });
   gltfloader.load("./models/workModels/j5.glb", function (glb) {
     // console.log("glb", glb);
     glb.scene.position.set(0, 0, 0);
     glb.scene.name = "j5_model";
     j5_model = glb.scene;
-    // scene.add(glb.scene);
-    groupModels.add(j5_model);
+
+    j5_model_group.add(j5_model.clone());
+    j4_model_group.add(j5_model_group);
   });
   gltfloader.load("./models/workModels/j6.glb", function (glb) {
     // console.log("glb", glb);
@@ -369,8 +368,8 @@ const initGtlModels = () => {
     });
     j6_model = glb.scene;
     glb.scene.position.set(0, 0, 0);
-    // scene.add(glb.scene);
-    groupModels.add(j6_model);
+    
+    j5_model_group.add(j6_model.clone());
   });
   // console.log(groupModels);
   roboticArmModel = groupModels;
@@ -421,11 +420,6 @@ const initGuiBox = () => {
     });
   j1_folder.add(controlData, "rotation", -10, 10).onChange((value) => {
     j1_model_group.rotation.y = value;
-    // j1_model.rotation.y = value;
-    // j2_model.rotation.y = value;
-    // j3_model.rotation.y = value;
-    // j4_model.rotation.y = value;
-    // j5_model.rotation.y = value;
   });
   const j2_folder = gui.addFolder("j2");
   j2_folder.addColor(controlData, "color").onChange((value) => {
@@ -458,18 +452,6 @@ const initGuiBox = () => {
 };
 
 console.log(scene);
-
-// 模型分组嵌套
-const ModelsNested = () => {
-  const part = new THREE.Mesh(j1_model);
-  const part1 = new THREE.Mesh(new THREE.BoxGeometry(200, 20, 400));
-  const part2 = new THREE.Mesh(new THREE.BoxGeometry(500, 755, 400));
-  part1.position.x = 500;
-  part2.position.x = -500;
-  j1_model_group.add(part).add(part1).add(part2);
-  groupModels.add(j1_model_group);
-  console.log(j1_model_group);
-};
 </script>
   
 <style lang="scss">
