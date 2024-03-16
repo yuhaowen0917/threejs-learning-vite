@@ -267,9 +267,10 @@ let j6Material = new THREE.MeshStandardMaterial({
   color: 0x2e2e2e,
 });
 let roboticArmModel;
-const groupModels = new THREE.Group(); //实例化一个THREE.Object3D对象
-groupModels.name = "robotic-arm";
+
 const initGtlModels = () => {
+  const group = new THREE.Group(); //实例化一个THREE.Object3D对象
+  group.name = "robotic-arm";
   gltfloader.load("./models/workModels/base.glb", function (glb) {
     // console.log("glb", glb);
     glb.scene.traverse((child) => {
@@ -278,12 +279,11 @@ const initGtlModels = () => {
         child.material = baseMaterial;
       }
     });
-    // glb.scene.scale.set(0.01, 0.01, 0.01);
     glb.scene.position.set(0, 0, 0);
     glb.scene.name = "base_model";
     base_model = glb.scene;
     // scene.add(glb.scene);
-    groupModels.add(base_model);
+    group.add(base_model);
   });
   gltfloader.load("./models/workModels/j1.glb", function (glb) {
     // console.log("glb", glb);
@@ -297,11 +297,10 @@ const initGtlModels = () => {
     glb.scene.position.set(0, 0, 0);
     glb.scene.name = "j1_model";
     j1_model = glb.scene;
-    // console.log(glb.scene, new THREE.Mesh(glb.scene));
-    // groupModels.add(j1_model);
+    // group.add(j1_model);
 
     j1_model_group.add(j1_model.clone());
-    groupModels.add(j1_model_group);
+    group.add(j1_model_group);
   });
   gltfloader.load("./models/workModels/j2.glb", function (glb) {
     // console.log("glb", glb);
@@ -314,7 +313,7 @@ const initGtlModels = () => {
     glb.scene.position.set(0, 0, 0);
     glb.scene.name = "j2_model";
     j2_model = glb.scene;
-    // groupModels.add(j2_model);
+    // group.add(j2_model);
     j2_model_group.add(j2_model.clone());
     j1_model_group.add(j2_model_group);
   });
@@ -330,7 +329,7 @@ const initGtlModels = () => {
     glb.scene.name = "j3_model";
     j3_model = glb.scene;
     // scene.add(glb.scene);
-    // groupModels.add(j3_model);
+    // group.add(j3_model);
 
     j3_model_group.add(j3_model.clone());
     j2_model_group.add(j3_model_group);
@@ -368,16 +367,16 @@ const initGtlModels = () => {
     });
     j6_model = glb.scene;
     glb.scene.position.set(0, 0, 0);
-    
+
     j5_model_group.add(j6_model.clone());
   });
-  // console.log(groupModels);
-  roboticArmModel = groupModels;
+  console.log(group);
+  roboticArmModel = group;
   // group 整体进行操作
   // group.rotation.y -= Math.PI / 2;
   // group.position.set(0, 1, 0);
 
-  scene.add(groupModels); //将对象组添加到场景当中
+  scene.add(group); //将对象组添加到场景当中
 
   // 模型分组
   // ModelsNested();
