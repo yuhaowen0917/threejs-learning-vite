@@ -262,6 +262,14 @@ let j4Material = new THREE.MeshPhysicalMaterial({
 let j5_model;
 const j5_model_group = new THREE.Object3D();
 j5_model_group.name = "j5_model_group";
+let j5Material = new THREE.MeshPhysicalMaterial({
+  color: 0xf0ea2b,
+  metalness: 1.0,
+  roughness: 0.5,
+  clearcoat: 1.0,
+  clearcoatRoughness: 0.05,
+  clearcoatNormalScale: 0.1,
+});
 let j6_model;
 const j6_model_group = new THREE.Object3D();
 j6_model_group.name = "j6_model_group";
@@ -316,16 +324,15 @@ const initGtlModels = () => {
     glb.scene.name = "j2_model";
     j2_model = glb.scene;
 
-    // j2_model.rotation.z -= Math.PI / 2;
-
-    // const box = new THREE.Box3().setFromObject(j2_model.clone());
-    // j2_model.position.x = -(box.min.x + box.max.x) / 2;
-
+    // 先移动整个对象，再将单个模型移回原位，修改旋转点
     j2_model_group.position.y += 450;
     j2_model.position.y -= 450;
+
+    j2_model_group.position.x += 75;
+    j2_model.position.x -= 75;
     // 偏移X = -(box.min.x+ box.max.x) / 2
-    console.log(j2_model);
-    console.log(new THREE.Box3().setFromObject(j2_model_group.clone()));
+    // console.log(j2_model);
+    // console.log(new THREE.Box3().setFromObject(j2_model_group.clone()));
 
     j2_model_group.add(j2_model.clone());
     j1_model_group.add(j2_model_group);
@@ -343,6 +350,14 @@ const initGtlModels = () => {
     j3_model = glb.scene;
 
     j3_model_group.position.y -= 450;
+    j3_model_group.position.x -= 75;
+
+    j3_model_group.position.y += 1090;
+    j3_model.position.y -= 1090;
+
+    j3_model_group.position.x += 75;
+    j3_model.position.x -= 75;
+
     j3_model_group.add(j3_model.clone());
     j2_model_group.add(j3_model_group);
   });
@@ -357,13 +372,38 @@ const initGtlModels = () => {
     glb.scene.position.set(0, 0, 0);
     j4_model = glb.scene;
     glb.scene.name = "j4_model";
+
+    j4_model_group.position.y -= 1090;
+    j4_model_group.position.x -= 75;
+
+    j4_model_group.position.y += 1285;
+    j4_model.position.y -= 1285;
+
+    console.log(j4_model_group);
+
     j4_model_group.add(j4_model.clone());
     j3_model_group.add(j4_model_group);
   });
   gltfloader.load("./models/workModels/j5.glb", function (glb) {
     // glb.scene.position.set(0, 0, 0);
+
+    glb.scene.traverse((child) => {
+      if (child.isMesh) {
+        // console.log(child);
+        child.material = j5Material;
+      }
+    });
+
     glb.scene.name = "j5_model";
     j5_model = glb.scene;
+
+    j5_model_group.position.y -= 1285;
+
+    j5_model_group.position.y += 1285;
+    j5_model.position.y -= 1285;
+
+    j5_model_group.position.x += 775;
+    j5_model.position.x -= 775;
 
     j5_model_group.add(j5_model.clone());
     j4_model_group.add(j5_model_group);
@@ -372,7 +412,6 @@ const initGtlModels = () => {
     // console.log("glb", glb);
     glb.scene.traverse((child) => {
       if (child.isMesh) {
-        // console.log(child);
         child.material = j6Material;
       }
     });
@@ -380,9 +419,16 @@ const initGtlModels = () => {
     j6_model = glb.scene;
     glb.scene.position.set(0, 0, 0);
 
+    j6_model_group.position.y -= 1285;
+    j6_model_group.position.x -= 775;
+
+    j6_model_group.position.y += 1285;
+    j6_model.position.y -= 1285;
+
     j6_model_group.add(j6_model.clone());
     j5_model_group.add(j6_model_group);
   });
+
   console.log(group);
   roboticArmModel = group;
   // group 整体进行操作
