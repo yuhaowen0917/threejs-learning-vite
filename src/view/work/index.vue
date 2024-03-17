@@ -315,7 +315,18 @@ const initGtlModels = () => {
     glb.scene.position.set(0, 0, 0);
     glb.scene.name = "j2_model";
     j2_model = glb.scene;
-    // group.add(j2_model);
+
+    // j2_model.rotation.z -= Math.PI / 2;
+
+    // const box = new THREE.Box3().setFromObject(j2_model.clone());
+    // j2_model.position.x = -(box.min.x + box.max.x) / 2;
+
+    j2_model_group.position.y += 450;
+    j2_model.position.y -= 450;
+    // 偏移X = -(box.min.x+ box.max.x) / 2
+    console.log(j2_model);
+    console.log(new THREE.Box3().setFromObject(j2_model_group.clone()));
+
     j2_model_group.add(j2_model.clone());
     j1_model_group.add(j2_model_group);
   });
@@ -330,9 +341,8 @@ const initGtlModels = () => {
     glb.scene.position.set(0, 0, 0);
     glb.scene.name = "j3_model";
     j3_model = glb.scene;
-    // scene.add(glb.scene);
-    // group.add(j3_model);
 
+    j3_model_group.position.y -= 450;
     j3_model_group.add(j3_model.clone());
     j2_model_group.add(j3_model_group);
   });
@@ -380,9 +390,6 @@ const initGtlModels = () => {
   // group.position.set(0, 1, 0);
 
   scene.add(group); //将对象组添加到场景当中
-
-  // 模型分组
-  // ModelsNested();
 };
 
 // GUI界面
@@ -433,7 +440,7 @@ const initGuiBox = () => {
     .onFinishChange((value) => {
       j2_model_group.children[0].visible = value;
     });
-  j2_folder.add(controlData, "rotation", -10, 10).onChange((value) => {
+  j2_folder.add(controlData, "rotation", -2, 2).onChange((value) => {
     j2_model_group.rotation.z = value;
   });
   const j3_folder = gui.addFolder("j3");
