@@ -21,11 +21,10 @@ import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
 import { FXAAShader } from "three/addons/shaders/FXAAShader.js";
 import { SMAAPass } from "three/addons/postprocessing/SMAAPass.js";
-import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 
 import * as TWEEN from "@tweenjs/tween.js";
 // 导入动画库
-import gsap from "gsap";
+// import gsap from "gsap";
 
 // 导入 dat.gui
 import * as dat from "dat.gui";
@@ -454,7 +453,6 @@ const initGuiBox = () => {
   gui.domElement.id = "gui_box";
   const base_folder = gui.addFolder("base");
   base_folder.addColor(controlData, "color").onChange((value) => {
-    // scene.background = new THREE.Color(value);
     baseMaterial.color.set(value);
     // console.log(base_model);
   });
@@ -586,7 +584,6 @@ let outlinePass;
 let renderPass;
 let effectFXAA;
 let smaaPass;
-let unrealBloomPass;
 
 // 模型高亮描边方法
 const add_composer = (selectedObjects) => {
@@ -633,6 +630,22 @@ const add_composer = (selectedObjects) => {
   smaaPass = new SMAAPass();
   composer.addPass(smaaPass);
 };
+
+//双击控制屏幕进入全屏, 退出全屏
+window.addEventListener("dblclick", () => {
+  // document.fullscreenElement; 进入全屏之后的canvans DOM元素
+  const fullscreenElement = document.fullscreenElement;
+
+  if (fullscreenElement) {
+    //退出全屏, 使用document对象
+    document.exitFullscreen();
+  } else {
+    //让画布对象全屏  此处renderer为three.js渲染器
+    // renderer.domElement.requestFullscreen();
+    // console.log(testModels.value);
+    testModels.value.requestFullscreen();
+  }
+});
 </script>
   
 <style lang="scss">
