@@ -20,8 +20,8 @@ import { OutlinePass } from "three/addons/postprocessing/OutlinePass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
 import { FXAAShader } from "three/addons/shaders/FXAAShader.js";
-// import { SMAAPass } from "three/addons/postprocessing/SMAAPass.js";
-// import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import { SMAAPass } from "three/addons/postprocessing/SMAAPass.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 
 import * as TWEEN from "@tweenjs/tween.js";
 // 导入动画库
@@ -44,6 +44,8 @@ onMounted(() => {
   testModels.value.appendChild(renderer.domElement);
   render();
   testModels.value.appendChild(stats.domElement);
+
+  // console.log(testModels.value);
 
   // initStlModels();
   initGtlModels();
@@ -93,11 +95,13 @@ const ground = new THREE.PlaneGeometry(3000, 2000); // 模型
 const ground_material = new THREE.MeshPhongMaterial({
   color: 0x484848,
   shininess: 100,
+  side: THREE.DoubleSide, // 允许平面几何体双面渲染
 });
 const ground_cube = new THREE.Mesh(ground, ground_material); // 网格
 ground_cube.rotation.x -= Math.PI / 2;
 // 地面设置接收光源
 ground_cube.receiveShadow = true;
+ground_cube.name = "ground";
 scene.add(ground_cube);
 
 const render = () => {
@@ -564,12 +568,14 @@ document.addEventListener("click", (event) => {
   raycaster.setFromCamera(pointer, camera);
   // 计算物体和射线的焦点
   const intersects = raycaster.intersectObjects(scene.children);
+  // console.log(intersects);
   if (intersects.length > 0) {
     // 射线涉及到的物体集合
     // console.log(intersects[0].object);
+    // intersects[0].object.scale.set(0.5, 0.5, 0.5);
     add_composer([intersects[0].object]);
   } else if (intersects.length === 0) {
-    // 点击空白区域的时候就清楚高亮效果
+    // 点击空白区域的时候就清除高亮效果
     add_composer([]);
   }
 });
@@ -579,31 +585,37 @@ let composer;
 let outlinePass;
 let renderPass;
 let effectFXAA;
-// let smaaPass;
-// let unrealBloomPass;
+let smaaPass;
+let unrealBloomPass;
 
+// 模型高亮描边方法
 const add_composer = (selectedObjects) => {
+  // selectedObjects 点击的模型数据 []
   // 创建一个EffectComposer（效果组合器）对象，然后在该对象上添加后期处理通道。
   composer = new EffectComposer(renderer);
+
   // 新建一个场景通道  为了覆盖到原来的场景上
   renderPass = new RenderPass(scene, camera);
   composer.addPass(renderPass);
+
   // 物体边缘发光通道
   outlinePass = new OutlinePass(
     new THREE.Vector2(window.innerWidth, window.innerHeight),
     scene,
     camera
   );
-  outlinePass.visibleEdgeColor.set(parseInt(0xfff010)); // 呼吸显示的颜色
+  outlinePass.selectedObjects = selectedObjects;
+  outlinePass.visibleEdgeColor.set(parseInt(0xffff00)); // 呼吸显示的颜色
   outlinePass.hiddenEdgeColor = new THREE.Color(0, 0, 0); // 呼吸消失的颜色
-  outlinePass.edgeStrength = 10.0; // 边框的亮度
+  outlinePass.edgeStrength = 12.0; // 边框的亮度
   outlinePass.edgeGlow = 0.5; // 光晕[0,1]
   outlinePass.usePatternTexture = false; // 是否使用父级的材质
   outlinePass.edgeThickness = 1.0; // 边框宽度
   outlinePass.downSampleRatio = 1; // 边框弯曲度
   outlinePass.pulsePeriod = 5; // 呼吸闪烁的速度
-  outlinePass.selectedObjects = selectedObjects;
+  outlinePass.clear = true;
   composer.addPass(outlinePass);
+
   // 解决高亮后环境变暗的问题
   const outputPass = new OutputPass();
   composer.addPass(outputPass);
@@ -614,7 +626,12 @@ const add_composer = (selectedObjects) => {
     1 / window.innerWidth,
     1 / window.innerHeight
   );
+  effectFXAA.renderToScreen = true;
   composer.addPass(effectFXAA);
+
+  // 抗锯齿
+  smaaPass = new SMAAPass();
+  composer.addPass(smaaPass);
 };
 </script>
   

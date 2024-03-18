@@ -90,6 +90,8 @@ const ModelsNested = () => {
 
 [threejs单击选中模型高亮显示/选中模型发光](https://blog.csdn.net/qq_15023917/article/details/114366480)
 
+[threeJS鼠标单击模型边缘高亮](https://blog.csdn.net/mmiaoChong/article/details/113751254)
+
 ```javascript
 // 导入所需要的插件 后期处理效果
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
@@ -109,13 +111,17 @@ let effectFXAA;
 // let smaaPass;
 // let unrealBloomPass;
 
+add_composer([intersects[0].object]); // 用数组括号包裹
+
 const add_composer = (selectedObjects) => {
   // 创建一个EffectComposer（效果组合器）对象，然后在该对象上添加后期处理通道。
   composer = new EffectComposer(renderer);
+  
   // 新建一个场景通道  为了覆盖到原来的场景上
   renderPass = new RenderPass(scene, camera);
   composer.addPass(renderPass);
   // 物体边缘发光通道
+
   outlinePass = new OutlinePass(
     new THREE.Vector2(window.innerWidth, window.innerHeight),
     scene,
@@ -124,7 +130,7 @@ const add_composer = (selectedObjects) => {
   outlinePass.visibleEdgeColor.set(parseInt(0xfff010)); // 呼吸显示的颜色
   outlinePass.hiddenEdgeColor = new THREE.Color(0, 0, 0); // 呼吸消失的颜色
   outlinePass.edgeStrength = 10.0; // 边框的亮度
-  outlinePass.edgeGlow = 0.5; // 光晕[0,1]
+  outlinePass.edgeGlow = 1; // 光晕[0,1]
   outlinePass.usePatternTexture = false; // 是否使用父级的材质
   outlinePass.edgeThickness = 1.0; // 边框宽度
   outlinePass.downSampleRatio = 1; // 边框弯曲度
