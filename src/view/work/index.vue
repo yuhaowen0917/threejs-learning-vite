@@ -13,6 +13,15 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { STLLoader } from "three/addons/loaders/STLLoader.js";
 
 import Stats from "three/addons/libs/stats.module.js";
+// 现后期处理效果
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { OutlinePass } from "three/addons/postprocessing/OutlinePass.js";
+import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
+import { FXAAShader } from "three/addons/shaders/FXAAShader.js";
+// import { SMAAPass } from "three/addons/postprocessing/SMAAPass.js";
+// import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 
 import * as TWEEN from "@tweenjs/tween.js";
 // 导入动画库
@@ -76,8 +85,20 @@ window.addEventListener("resize", () => {
 });
 
 // 添加网格地面
-const gridHelper = new THREE.GridHelper(400, 400);
-scene.add(gridHelper);
+const gridHelper = new THREE.GridHelper(1000, 1000);
+// scene.add(gridHelper);
+
+// 创建地面
+const ground = new THREE.PlaneGeometry(3000, 2000); // 模型
+const ground_material = new THREE.MeshPhongMaterial({
+  color: 0x484848,
+  shininess: 100,
+});
+const ground_cube = new THREE.Mesh(ground, ground_material); // 网格
+ground_cube.rotation.x -= Math.PI / 2;
+// 地面设置接收光源
+ground_cube.receiveShadow = true;
+scene.add(ground_cube);
 
 const render = () => {
   stats.update();
@@ -90,6 +111,10 @@ const render = () => {
 
   // 动画更新 自定义
   TWEEN.update();
+
+  if (composer) {
+    composer.render(scene, camera);
+  }
 };
 
 // 创建轨道控制器
@@ -103,7 +128,6 @@ controls.update();
 
 // 加入辅助轴，查看3维坐标轴
 const axesHelper = new THREE.AxesHelper(400);
-// axesHelper.position.y = 3;
 scene.add(axesHelper);
 
 // 环境光
@@ -144,32 +168,6 @@ const tick = () => {
 
   window.requestAnimationFrame(tick);
 };
-
-// 点击模型事件
-const raycaster = new THREE.Raycaster();
-const pointer = new THREE.Vector2();
-document.addEventListener("click", (event) => {
-  // console.log(event);
-  // 将鼠标位置归一化为设备坐标。x 和 y 方向的取值范围是 (-1 to +1)
-  pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
-  pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
-  // console.log(pointer);
-  // 通过摄像机和鼠标位置更新射线
-  raycaster.setFromCamera(pointer, camera);
-  // 计算物体和射线的焦点
-  const intersects = raycaster.intersectObjects(scene.children);
-  if (intersects.length > 0) {
-    // 射线涉及到的物体集合
-    // console.log(intersects[0].object.name);
-    // intersects[0].object.rotation.x += (10 * Math.PI) / 180;
-    // for (let i = 0; i <script intersects.length; i++) {
-    //   intersects[i].object.material.color.set(0xff0000);
-    //   intersects[i].object.rotation.x += (10 * Math.PI) / 180;
-    //   intersects[i].object.position.x += 10;
-    //   intersects[i].object.position.add(vector);
-    // }
-  }
-});
 
 const stlloader = new STLLoader();
 const initStlModels = () => {
@@ -379,7 +377,7 @@ const initGtlModels = () => {
     j4_model_group.position.y += 1285;
     j4_model.position.y -= 1285;
 
-    console.log(j4_model_group);
+    // console.log(j4_model_group);
 
     j4_model_group.add(j4_model.clone());
     j3_model_group.add(j4_model_group);
@@ -429,11 +427,11 @@ const initGtlModels = () => {
     j5_model_group.add(j6_model_group);
   });
 
-  console.log(group);
+  console.log("机械臂模型==>", group);
   roboticArmModel = group;
   // group 整体进行操作
   // group.rotation.y -= Math.PI / 2;
-  // group.position.set(0, 1, 0);
+  // group.position.set(500, 0, 0);
 
   scene.add(group); //将对象组添加到场景当中
 };
@@ -551,7 +549,73 @@ const initGuiBox = () => {
   });
 };
 
-console.log(scene);
+console.log("scene==>", scene);
+
+// 点击模型事件
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+document.addEventListener("click", (event) => {
+  // console.log(event);
+  // 将鼠标位置归一化为设备坐标。x 和 y 方向的取值范围是 (-1 to +1)
+  pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+  pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  // console.log(pointer);
+  // 通过摄像机和鼠标位置更新射线
+  raycaster.setFromCamera(pointer, camera);
+  // 计算物体和射线的焦点
+  const intersects = raycaster.intersectObjects(scene.children);
+  if (intersects.length > 0) {
+    // 射线涉及到的物体集合
+    // console.log(intersects[0].object);
+    add_composer([intersects[0].object]);
+  } else if (intersects.length === 0) {
+    // 点击空白区域的时候就清楚高亮效果
+    add_composer([]);
+  }
+});
+
+// 模型选中高亮 边缘高光
+let composer;
+let outlinePass;
+let renderPass;
+let effectFXAA;
+// let smaaPass;
+// let unrealBloomPass;
+
+const add_composer = (selectedObjects) => {
+  // 创建一个EffectComposer（效果组合器）对象，然后在该对象上添加后期处理通道。
+  composer = new EffectComposer(renderer);
+  // 新建一个场景通道  为了覆盖到原来的场景上
+  renderPass = new RenderPass(scene, camera);
+  composer.addPass(renderPass);
+  // 物体边缘发光通道
+  outlinePass = new OutlinePass(
+    new THREE.Vector2(window.innerWidth, window.innerHeight),
+    scene,
+    camera
+  );
+  outlinePass.visibleEdgeColor.set(parseInt(0xfff010)); // 呼吸显示的颜色
+  outlinePass.hiddenEdgeColor = new THREE.Color(0, 0, 0); // 呼吸消失的颜色
+  outlinePass.edgeStrength = 10.0; // 边框的亮度
+  outlinePass.edgeGlow = 0.5; // 光晕[0,1]
+  outlinePass.usePatternTexture = false; // 是否使用父级的材质
+  outlinePass.edgeThickness = 1.0; // 边框宽度
+  outlinePass.downSampleRatio = 1; // 边框弯曲度
+  outlinePass.pulsePeriod = 5; // 呼吸闪烁的速度
+  outlinePass.selectedObjects = selectedObjects;
+  composer.addPass(outlinePass);
+  // 解决高亮后环境变暗的问题
+  const outputPass = new OutputPass();
+  composer.addPass(outputPass);
+
+  // 自定义的着色器通道 作为参数
+  effectFXAA = new ShaderPass(FXAAShader);
+  effectFXAA.uniforms["resolution"].value.set(
+    1 / window.innerWidth,
+    1 / window.innerHeight
+  );
+  composer.addPass(effectFXAA);
+};
 </script>
   
 <style lang="scss">

@@ -1,19 +1,12 @@
 # Vue 3 + Vite
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
-
-## Recommended IDE Setup
-
-- [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur) + [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin).
-
-
 在 Vue 中，直接使用 addEventListener 来监听元素宽高变化并不简单，因为原生的 DOM 事件并不包括元素的尺寸变化。但是，你可以使用一种称为“Resize Observer”的 API 来实现这个功能。
 
 Resize Observer 是一个能够异步观察元素尺寸变化的接口。如果元素的大小发生变化，则会通知你。
 
 以下是如何在 Vue 组件中使用 Resize Observer 的示例：
 
-```
+```vue
 <template>  
   <div ref="myElement">  
     <!-- Your content here -->  
@@ -47,7 +40,7 @@ export default {
 ```
 模型点击事件，通过光射线.Raycaster()
 
-```
+```javascript
 // 点击模型事件
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
@@ -75,7 +68,7 @@ document.addEventListener("click", (event) => {
 将所有子模型合并在一个对象中 或者一个分组内
 将连动的模型也可以合并在一起
 
-```
+```javascript
 // 模型分组嵌套 错误代码
 const ModelsNested = () => {
   const part = new THREE.Mesh(j1_model); // // 将 new THREE.Mesh(j1_model) 改为 j1_model.clone()，
@@ -86,5 +79,68 @@ const ModelsNested = () => {
   j1_model_group.add(part).add(part1).add(part2);
   groupModels.add(j1_model_group);
   console.log(j1_model_group);
+};
+```
+
+### 选中模型的高亮效果
+
+参考文章
+
+[hreejs点击模型实现模型边缘高亮的选中效果](https://juejin.cn/post/7264780458738778153)
+
+[threejs单击选中模型高亮显示/选中模型发光](https://blog.csdn.net/qq_15023917/article/details/114366480)
+
+```javascript
+// 导入所需要的插件 后期处理效果
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { OutlinePass } from "three/addons/postprocessing/OutlinePass.js";
+import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
+import { FXAAShader } from "three/addons/shaders/FXAAShader.js";
+// import { SMAAPass } from "three/addons/postprocessing/SMAAPass.js";
+// import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+
+// 模型选中高亮 边缘高光
+let composer;
+let outlinePass;
+let renderPass;
+let effectFXAA;
+// let smaaPass;
+// let unrealBloomPass;
+
+const add_composer = (selectedObjects) => {
+  // 创建一个EffectComposer（效果组合器）对象，然后在该对象上添加后期处理通道。
+  composer = new EffectComposer(renderer);
+  // 新建一个场景通道  为了覆盖到原来的场景上
+  renderPass = new RenderPass(scene, camera);
+  composer.addPass(renderPass);
+  // 物体边缘发光通道
+  outlinePass = new OutlinePass(
+    new THREE.Vector2(window.innerWidth, window.innerHeight),
+    scene,
+    camera
+  );
+  outlinePass.visibleEdgeColor.set(parseInt(0xfff010)); // 呼吸显示的颜色
+  outlinePass.hiddenEdgeColor = new THREE.Color(0, 0, 0); // 呼吸消失的颜色
+  outlinePass.edgeStrength = 10.0; // 边框的亮度
+  outlinePass.edgeGlow = 0.5; // 光晕[0,1]
+  outlinePass.usePatternTexture = false; // 是否使用父级的材质
+  outlinePass.edgeThickness = 1.0; // 边框宽度
+  outlinePass.downSampleRatio = 1; // 边框弯曲度
+  outlinePass.pulsePeriod = 5; // 呼吸闪烁的速度
+  outlinePass.selectedObjects = selectedObjects;
+  composer.addPass(outlinePass);
+  // 解决高亮后环境变暗的问题
+  const outputPass = new OutputPass();
+  composer.addPass(outputPass);
+
+  // 自定义的着色器通道 作为参数
+  effectFXAA = new ShaderPass(FXAAShader);
+  effectFXAA.uniforms["resolution"].value.set(
+    1 / window.innerWidth,
+    1 / window.innerHeight
+  );
+  composer.addPass(effectFXAA);
 };
 ```
