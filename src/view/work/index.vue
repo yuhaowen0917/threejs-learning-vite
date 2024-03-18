@@ -613,8 +613,8 @@ const add_composer = (selectedObjects) => {
   outlinePass.selectedObjects = selectedObjects;
   outlinePass.visibleEdgeColor.set(parseInt(0xffff00)); // 呼吸显示的颜色
   outlinePass.hiddenEdgeColor = new THREE.Color(0, 0, 0); // 呼吸消失的颜色
-  outlinePass.edgeStrength = 12.0; // 边框的亮度
-  outlinePass.edgeGlow = 0.5; // 光晕[0,1]
+  outlinePass.edgeStrength = 10.0; // 边框的亮度
+  outlinePass.edgeGlow = 0.6; // 光晕[0,1]
   outlinePass.usePatternTexture = false; // 是否使用父级的材质
   outlinePass.edgeThickness = 1.0; // 边框宽度
   outlinePass.downSampleRatio = 1; // 边框弯曲度
