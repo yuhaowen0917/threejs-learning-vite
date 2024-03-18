@@ -96,6 +96,15 @@ const ground_material = new THREE.MeshPhongMaterial({
   shininess: 100,
   side: THREE.DoubleSide, // 允许平面几何体双面渲染
 });
+// const ground_material = new THREE.MeshPhysicalMaterial({
+//   color: 0x484848,
+//   metalness: 1.0,
+//   roughness: 0.5,
+//   clearcoat: 1.0,
+//   clearcoatRoughness: 0.05,
+//   clearcoatNormalScale: 0.1,
+//   side: THREE.DoubleSide, // 允许平面几何体双面渲染
+// });
 const ground_cube = new THREE.Mesh(ground, ground_material); // 网格
 ground_cube.rotation.x -= Math.PI / 2;
 // 地面设置接收光源
