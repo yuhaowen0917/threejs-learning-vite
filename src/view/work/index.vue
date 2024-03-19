@@ -294,15 +294,14 @@ const initGtlModels = () => {
   gltfloader.load("./models/workModels/base.glb", function (glb) {
     // console.log("glb", glb);
     glb.scene.traverse((child) => {
+      // console.log("child", child);
       if (child.isMesh) {
-        // console.log(child);
         child.material = baseMaterial;
       }
     });
     glb.scene.position.set(0, 0, 0);
     glb.scene.name = "base_model";
     base_model = glb.scene;
-    // scene.add(glb.scene);
     group.add(base_model);
   });
   gltfloader.load("./models/workModels/j1.glb", function (glb) {
@@ -313,7 +312,6 @@ const initGtlModels = () => {
         child.material = j1Material;
       }
     });
-    // glb.scene.scale.set(0.01, 0.01, 0.01);
     glb.scene.position.set(0, 0, 0);
     glb.scene.name = "j1_model";
     j1_model = glb.scene;
@@ -341,7 +339,6 @@ const initGtlModels = () => {
     j2_model_group.position.x += 75;
     j2_model.position.x -= 75;
     // 偏移X = -(box.min.x+ box.max.x) / 2
-    // console.log(j2_model);
     // console.log(new THREE.Box3().setFromObject(j2_model_group.clone()));
 
     j2_model_group.add(j2_model.clone());
@@ -359,13 +356,14 @@ const initGtlModels = () => {
     glb.scene.name = "j3_model";
     j3_model = glb.scene;
 
-    j3_model_group.position.y -= 450;
-    j3_model_group.position.x -= 75;
+    // j3_model_group.position.y -= 450;
+    // j3_model_group.position.x -= 75;
 
-    j3_model_group.position.y += 1090;
+    // j3_model_group.position.y += 1090;
+    j3_model_group.position.y += 640;
     j3_model.position.y -= 1090;
 
-    j3_model_group.position.x += 75;
+    // j3_model_group.position.x += 75;
     j3_model.position.x -= 75;
 
     j3_model_group.add(j3_model.clone());
@@ -375,7 +373,6 @@ const initGtlModels = () => {
     // console.log("glb", glb);
     glb.scene.traverse((child) => {
       if (child.isMesh) {
-        // console.log(child);
         child.material = j4Material;
       }
     });
@@ -383,33 +380,29 @@ const initGtlModels = () => {
     j4_model = glb.scene;
     glb.scene.name = "j4_model";
 
-    j4_model_group.position.y -= 1090;
+    // j4_model_group.position.y -= 1090;
     j4_model_group.position.x -= 75;
 
-    j4_model_group.position.y += 1285;
+    // j4_model_group.position.y += 1285;
+    j4_model_group.position.y += 195;
     j4_model.position.y -= 1285;
-
-    // console.log(j4_model_group);
 
     j4_model_group.add(j4_model.clone());
     j3_model_group.add(j4_model_group);
   });
   gltfloader.load("./models/workModels/j5.glb", function (glb) {
-    // glb.scene.position.set(0, 0, 0);
-
+    glb.scene.position.set(0, 0, 0);
     glb.scene.traverse((child) => {
       if (child.isMesh) {
-        // console.log(child);
         child.material = j5Material;
       }
     });
-
     glb.scene.name = "j5_model";
     j5_model = glb.scene;
 
-    j5_model_group.position.y -= 1285;
+    // j5_model_group.position.y -= 1285;
 
-    j5_model_group.position.y += 1285;
+    // j5_model_group.position.y += 1285;
     j5_model.position.y -= 1285;
 
     j5_model_group.position.x += 775;
@@ -429,10 +422,10 @@ const initGtlModels = () => {
     j6_model = glb.scene;
     glb.scene.position.set(0, 0, 0);
 
-    j6_model_group.position.y -= 1285;
+    // j6_model_group.position.y -= 1285;
     j6_model_group.position.x -= 775;
 
-    j6_model_group.position.y += 1285;
+    // j6_model_group.position.y += 1285;
     j6_model.position.y -= 1285;
 
     j6_model_group.add(j6_model.clone());
