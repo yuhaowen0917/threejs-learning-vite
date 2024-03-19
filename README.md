@@ -6,39 +6,40 @@ Resize Observer 是一个能够异步观察元素尺寸变化的接口。如果�
 
 以下是如何在 Vue 组件中使用 Resize Observer 的示例：
 
-```vue
-<template>  
-  <div ref="myElement">  
-    <!-- Your content here -->  
-  </div>  
-</template>  
-  
-<script>  
-export default {  
-  mounted() {  
-    this.observeResize();  
-  },  
-  beforeDestroy() {  
-    if (this.resizeObserver) {  
-      this.resizeObserver.disconnect();  
-    }  
-  },  
-  methods: {  
-    observeResize() {  
-      const element = this.$refs.myElement;  
-      this.resizeObserver = new ResizeObserver(entries => {  
-        for (let entry of entries) {  
-          console.log(entry.contentRect); // 这里你可以获取到元素的尺寸信息  
-          // 在这里你可以添加你自己的逻辑，比如更新 Vue 的数据等  
-        }  
-      });  
-      this.resizeObserver.observe(element);  
-    }  
-  }  
-}  
+```javascript
+<template>
+  <div ref="myElement">
+    <!-- Your content here -->
+  </div>
+</template>
+
+<script>
+export default {
+  mounted() {
+    this.observeResize();
+  },
+  beforeDestroy() {
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+    }
+  },
+  methods: {
+    observeResize() {
+      const element = this.$refs.myElement;
+      this.resizeObserver = new ResizeObserver((entries) => {
+        for (let entry of entries) {
+          console.log(entry.contentRect); // 这里你可以获取到元素的尺寸信息
+          // 在这里你可以添加你自己的逻辑，比如更新 Vue 的数据等
+        }
+      });
+      this.resizeObserver.observe(element);
+    },
+  },
+};
 </script>
 ```
-模型点击事件，通过光射线.Raycaster()
+
+### 模型点击事件，通过光射线.Raycaster()
 
 ```javascript
 // 点击模型事件
@@ -65,6 +66,7 @@ document.addEventListener("click", (event) => {
 ```
 
 ### 机械臂连杆运动逻辑 连动 牵一发而动全身
+
 将所有子模型合并在一个对象中 或者一个分组内
 将连动的模型也可以合并在一起
 
@@ -86,11 +88,11 @@ const ModelsNested = () => {
 
 参考文章
 
-[hreejs点击模型实现模型边缘高亮的选中效果](https://juejin.cn/post/7264780458738778153)
+[hreejs 点击模型实现模型边缘高亮的选中效果](https://juejin.cn/post/7264780458738778153)
 
-[threejs单击选中模型高亮显示/选中模型发光](https://blog.csdn.net/qq_15023917/article/details/114366480)
+[threejs 单击选中模型高亮显示/选中模型发光](https://blog.csdn.net/qq_15023917/article/details/114366480)
 
-[threeJS鼠标单击模型边缘高亮](https://blog.csdn.net/mmiaoChong/article/details/113751254)
+[threeJS 鼠标单击模型边缘高亮](https://blog.csdn.net/mmiaoChong/article/details/113751254)
 
 ```javascript
 // 导入所需要的插件 后期处理效果
@@ -108,15 +110,14 @@ let composer;
 let outlinePass;
 let renderPass;
 let effectFXAA;
-// let smaaPass;
-// let unrealBloomPass;
+let smaaPass;
 
 add_composer([intersects[0].object]); // 用数组括号包裹
 
 const add_composer = (selectedObjects) => {
   // 创建一个EffectComposer（效果组合器）对象，然后在该对象上添加后期处理通道。
   composer = new EffectComposer(renderer);
-  
+
   // 新建一个场景通道  为了覆盖到原来的场景上
   renderPass = new RenderPass(scene, camera);
   composer.addPass(renderPass);
@@ -148,5 +149,72 @@ const add_composer = (selectedObjects) => {
     1 / window.innerHeight
   );
   composer.addPass(effectFXAA);
+
+  // 抗锯齿
+  smaaPass = new SMAAPass();
+  composer.addPass(smaaPass);
 };
+```
+
+### 修改模型对象旋转中心
+
+参考文章
+
+[Tweenjs 动画实例~](https://juejin.cn/post/7119016773730435086#heading-10)
+
+[Three.js 改变模型对象的旋转轴位置](http://www.yanhuangxueyuan.com/doc/Three.js/translateAxis.html)
+
+模型对象嵌套一个父对象，然后把该模型对象相对于父对象平移一定距离
+
+先移动整个对象分组，再将单个模型移回原位，修改旋转点
+
+```javascript
+gltfloader.load("./models/workModels/j2.glb", function (glb) {
+  // console.log("glb", glb);
+  glb.scene.traverse((child) => {
+    if (child.isMesh) {
+      child.material = j2Material;
+    }
+  });
+  // glb.scene.scale.set(0.01, 0.01, 0.01);
+  glb.scene.position.set(0, 0, 0);
+  glb.scene.name = "j2_model";
+  j2_model = glb.scene;
+
+  // 先移动整个对象，再将单个模型移回原位，修改旋转点
+  j2_model_group.position.y += 450;
+  j2_model.position.y -= 450;
+
+  j2_model_group.position.x += 75;
+  j2_model.position.x -= 75;
+  // 偏移X = -(box.min.x+ box.max.x) / 2
+  // console.log(new THREE.Box3().setFromObject(j2_model_group.clone()));
+
+  j2_model_group.add(j2_model.clone());
+  j1_model_group.add(j2_model_group);
+});
+gltfloader.load("./models/workModels/j3.glb", function (glb) {
+  // console.log("glb", glb);
+  glb.scene.traverse((child) => {
+    if (child.isMesh) {
+      // console.log(child);
+      child.material = j3Material;
+    }
+  });
+  glb.scene.position.set(0, 0, 0);
+  glb.scene.name = "j3_model";
+  j3_model = glb.scene;
+
+  j3_model_group.position.y -= 450;
+  j3_model_group.position.x -= 75;
+
+  j3_model_group.position.y += 1090;
+  j3_model.position.y -= 1090;
+
+  j3_model_group.position.x += 75;
+  j3_model.position.x -= 75;
+
+  j3_model_group.add(j3_model.clone());
+  j2_model_group.add(j3_model_group);
+});
 ```
