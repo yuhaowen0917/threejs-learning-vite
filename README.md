@@ -218,3 +218,41 @@ gltfloader.load("./models/workModels/j3.glb", function (glb) {
   j2_model_group.add(j3_model_group);
 });
 ```
+
+### Three.js 作为组件引入并使用时，模型点击坐标点偏差
+
+当将 Three.js 作为组件引入并使用时，由于组件内部可能存在自定义的 DOM 结构或样式，以及可能存在事件冒泡或事件捕获等问题，导致你在计算鼠标位置时出现偏差。
+
+一种解决方法是将事件监听添加到 Three.js 组件自身的 DOM 元素上，以确保事件处理程序能够正确捕获鼠标点击事件并计算正确的鼠标位置。下面是一个可能的修改方法：
+
+```javascript
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+const canvas = document.getElementById("testThree");
+canvas.addEventListener("click", (event) => {
+
+  // const boundingRect = renderer.domElement.getBoundingClientRect();
+  // console.log(testModels.value.getBoundingClientRect());
+  // console.log(
+  //   pointer.x, pointer.y,
+  //   ((event.clientX - boundingRect.left) / boundingRect.width) * 2 - 1,
+  //   -((event.clientY - boundingRect.top) / boundingRect.height) * 2 + 1
+  // );
+  
+  // 每次点击事件发生后后重新获取值，获取标签的宽高属性值
+  const rect = canvas.getBoundingClientRect();
+  // 将鼠标位置归一化为设备坐标。x 和 y 方向的取值范围是 (-1 to +1)
+  pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+  // 通过摄像机和鼠标位置更新射线
+  raycaster.setFromCamera(pointer, camera);
+  // 计算物体和射线的焦点
+  const intersects = raycaster.intersectObjects(scene.children);
+  if (intersects.length > 0) {
+    // 射线涉及到的物体集合
+    console.log(intersects)
+  } else if (intersects.length === 0) {
+  }
+});
+
+```

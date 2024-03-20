@@ -434,10 +434,6 @@ const initGtlModels = () => {
 
   console.log("机械臂模型==>", group);
   roboticArmModel = group;
-  // group 整体进行操作
-  // group.rotation.y -= Math.PI / 2;
-  // group.position.set(500, 0, 0);
-
   scene.add(group); //将对象组添加到场景当中
 };
 
@@ -563,7 +559,15 @@ document.addEventListener("click", (event) => {
   // 将鼠标位置归一化为设备坐标。x 和 y 方向的取值范围是 (-1 to +1)
   pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
   pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
-  // console.log(pointer);
+  
+  // const boundingRect = renderer.domElement.getBoundingClientRect();
+  // console.log(testModels.value.getBoundingClientRect());
+  // console.log(
+  //   pointer.x, pointer.y,
+  //   ((event.clientX - boundingRect.left) / boundingRect.width) * 2 - 1,
+  //   -((event.clientY - boundingRect.top) / boundingRect.height) * 2 + 1
+  // );
+
   // 通过摄像机和鼠标位置更新射线
   raycaster.setFromCamera(pointer, camera);
   // 计算物体和射线的焦点
@@ -649,7 +653,7 @@ window.addEventListener("dblclick", () => {
   }
 });
 </script>
-  
+
 <style lang="scss">
 .btn-box {
   position: absolute;
