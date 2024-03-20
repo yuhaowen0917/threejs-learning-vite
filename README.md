@@ -230,7 +230,6 @@ const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 const canvas = document.getElementById("testThree");
 canvas.addEventListener("click", (event) => {
-
   // const boundingRect = renderer.domElement.getBoundingClientRect();
   // console.log(testModels.value.getBoundingClientRect());
   // console.log(
@@ -238,7 +237,7 @@ canvas.addEventListener("click", (event) => {
   //   ((event.clientX - boundingRect.left) / boundingRect.width) * 2 - 1,
   //   -((event.clientY - boundingRect.top) / boundingRect.height) * 2 + 1
   // );
-  
+
   // 每次点击事件发生后后重新获取值，获取标签的宽高属性值
   const rect = canvas.getBoundingClientRect();
   // 将鼠标位置归一化为设备坐标。x 和 y 方向的取值范围是 (-1 to +1)
@@ -250,9 +249,66 @@ canvas.addEventListener("click", (event) => {
   const intersects = raycaster.intersectObjects(scene.children);
   if (intersects.length > 0) {
     // 射线涉及到的物体集合
-    console.log(intersects)
+    console.log(intersects);
   } else if (intersects.length === 0) {
   }
 });
+```
 
+### 自定义鼠标右键平移模型效果
+
+部分浏览器会出现鼠标手势的问题，无法正常进行右键平移模型,
+
+所以通过自定义鼠标事件，来实现完成平移模型的效果，
+
+但是目前移动是有缺陷的，鼠标右键点击松开后开始平移
+
+```javascript
+const rightClickMoveModel = (event) => {
+  // 用来记录鼠标的初始位置
+  let mouseX0 = 0;
+  let mouseY0 = 0;
+
+  // 监听鼠标的contextmenu事件（右键点击）
+  renderer.domElement.addEventListener("contextmenu", function (event) {
+    event.preventDefault(); // 阻止默认的右键菜单弹出
+    // console.log('1');
+    // 记录鼠标的初始位置
+    mouseX0 = event.clientX;
+    mouseY0 = event.clientY;
+    console.log(mouseX0, mouseY0);
+
+    // 添加鼠标移动事件监听
+    document.addEventListener("mousemove", onMouseMove, false);
+    // 添加鼠标松开事件监听
+    document.addEventListener("mouseup", onMouseUp, false);
+  });
+
+  // 鼠标移动事件处理函数
+  function onMouseMove(event) {
+    // 计算鼠标移动的距离
+    const dx = event.clientX - mouseX0;
+    const dy = event.clientY - mouseY0;
+    // console.log(dx, dy);
+
+    // 根据鼠标移动的距离来更新摄像机的位置
+    // 这里只是简单地将摄像机在x和z轴上进行平移
+    // 你可能需要根据实际需求调整平移的逻辑
+    camera.position.x -= dx * 10;
+    camera.position.y += dy * 10;
+
+    // 更新鼠标的当前位置
+    mouseX0 = event.clientX;
+    mouseY0 = event.clientY;
+  }
+
+  // 鼠标松开事件处理函数
+  function onMouseUp(event) {
+    console.log("鼠标松开");
+    // 移除鼠标移动事件监听
+    document.removeEventListener("mousemove", onMouseMove, false);
+    // 移除鼠标松开事件监听
+    document.removeEventListener("mouseup", onMouseUp, false);
+  }
+};
 ```

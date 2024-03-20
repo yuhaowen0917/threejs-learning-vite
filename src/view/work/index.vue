@@ -49,6 +49,8 @@ onMounted(() => {
   // initStlModels();
   initGtlModels();
   initGuiBox();
+
+  // rightClickMoveModel();
 });
 
 // 创建场景
@@ -82,11 +84,11 @@ window.addEventListener("resize", () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.enabled = true; // 开启阴影渲染功能
 });
 
 // 添加网格地面
-const gridHelper = new THREE.GridHelper(1000, 1000);
+// const gridHelper = new THREE.GridHelper(1000, 1000);
 // scene.add(gridHelper);
 
 // 创建地面
@@ -134,6 +136,7 @@ const controls = new OrbitControls(camera, renderer.domElement);
 // 设置控制器阻尼，是控制器效果更真实，必须在动画循环里调用.update()
 controls.enableDamping = false;
 controls.dampingFactor = 0.01;
+controls.enablePan = true; // 启用或禁用摄像机平移，默认为true
 // controls.autoRotate = true; // 是否自动旋转
 // controls.autoRotateSpeed = 0.01; // 围绕目标旋转的速度将有多快
 controls.update();
@@ -149,11 +152,14 @@ scene.add(light);
 // 平行光
 const directional_light = new THREE.DirectionalLight(0xffffff, 10);
 directional_light.position.set(1200, 1600, 1000);
+directional_light.castShadow = true;
 scene.add(directional_light);
 
 const directional_light_1 = new THREE.DirectionalLight(0xffffff, 10);
 directional_light_1.position.set(-1000, 1400, -1000);
+directional_light_1.castShadow = true;
 scene.add(directional_light_1);
+
 // 点光源
 const point_light = new THREE.PointLight(0xffffff, 400, 0);
 point_light.position.set(-500, 800, -500);
@@ -188,32 +194,23 @@ const initStlModels = () => {
     var material = baseMaterial;
     var mesh = new THREE.Mesh(stl, material); //网格模型对象Mesh
     mesh.rotation.x = -0.5 * Math.PI; //将模型摆正
-    // 物体接收光源
-    mesh.receiveShadow = true;
-    // 物体投射光源
-    mesh.castShadow = true;
+    mesh.position.x = 500;
     scene.add(mesh);
   });
   stlloader.load("./models/workModels/j1.stl", function (stl) {
-    console.log("stl", stl);
     var material = j1Material;
     var mesh = new THREE.Mesh(stl, material);
     mesh.rotation.x = -0.5 * Math.PI;
-    mesh.receiveShadow = true;
-    mesh.castShadow = true;
+    mesh.position.x = 500;
     scene.add(mesh);
   });
   stlloader.load("./models/workModels/j2.stl", function (stl) {
-    console.log("stl", stl);
     var material = new THREE.MeshLambertMaterial({
       color: 0x7272ff,
     });
     var mesh = new THREE.Mesh(stl, material); //网格模型对象Mesh
     mesh.rotation.x = -0.5 * Math.PI; //将模型摆正
-    // 物体接收光源
-    mesh.receiveShadow = true;
-    // 物体投射光源
-    mesh.castShadow = true;
+    mesh.position.x = 500;
     scene.add(mesh);
   });
 };
@@ -433,6 +430,7 @@ const initGtlModels = () => {
   });
 
   console.log("机械臂模型==>", group);
+  group.castShadow = true;
   roboticArmModel = group;
   scene.add(group); //将对象组添加到场景当中
 };
@@ -559,7 +557,7 @@ document.addEventListener("click", (event) => {
   // 将鼠标位置归一化为设备坐标。x 和 y 方向的取值范围是 (-1 to +1)
   pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
   pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
-  
+
   // const boundingRect = renderer.domElement.getBoundingClientRect();
   // console.log(testModels.value.getBoundingClientRect());
   // console.log(
@@ -608,7 +606,7 @@ const add_composer = (selectedObjects) => {
     camera
   );
   outlinePass.selectedObjects = selectedObjects;
-  outlinePass.visibleEdgeColor.set(parseInt(0xffff00)); // 呼吸显示的颜色
+  outlinePass.visibleEdgeColor.set(parseInt(0xfffbfb)); // 呼吸显示的颜色
   outlinePass.hiddenEdgeColor = new THREE.Color(0, 0, 0); // 呼吸消失的颜色
   outlinePass.edgeStrength = 10.0; // 边框的亮度
   outlinePass.edgeGlow = 0.6; // 光晕[0,1]
@@ -652,6 +650,52 @@ window.addEventListener("dblclick", () => {
     testModels.value.requestFullscreen();
   }
 });
+
+// rightClickMoveModel
+const rightClickMoveModel = (event) => {
+  // 用来记录鼠标的初始位置
+  let mouseX0 = 0;
+  let mouseY0 = 0;
+
+  // 监听鼠标的contextmenu事件（右键点击）
+  renderer.domElement.addEventListener("contextmenu", function (event) {
+    event.preventDefault(); // 阻止默认的右键菜单弹出
+    // console.log('1');
+    // 记录鼠标的初始位置
+    mouseX0 = event.clientX;
+    mouseY0 = event.clientY;
+
+    // 添加鼠标移动事件监听
+    document.addEventListener("mousemove", onMouseMove, false);
+    // 添加鼠标松开事件监听
+    document.addEventListener("mouseup", onMouseUp, false);
+  });
+
+  // 鼠标移动事件处理函数
+  function onMouseMove(event) {
+    // 计算鼠标移动的距离
+    const dx = event.clientX - mouseX0;
+    const dy = event.clientY - mouseY0;
+
+    // 根据鼠标移动的距离来更新摄像机的位置
+    // 这里只是简单地将摄像机在x和z轴上进行平移
+    // 你可能需要根据实际需求调整平移的逻辑
+    camera.position.x -= dx * 10;
+    camera.position.y += dy * 10;
+
+    // 更新鼠标的当前位置
+    mouseX0 = event.clientX;
+    mouseY0 = event.clientY;
+  }
+
+  // 鼠标松开事件处理函数
+  function onMouseUp(event) {
+    // 移除鼠标移动事件监听
+    document.removeEventListener("mousemove", onMouseMove, false);
+    // 移除鼠标松开事件监听
+    document.removeEventListener("mouseup", onMouseUp, false);
+  }
+};
 </script>
 
 <style lang="scss">

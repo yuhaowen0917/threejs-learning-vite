@@ -131,11 +131,6 @@ const render = () => {
 };
 
 onMounted(() => {
-  // console.log(
-  //   testModels.value,
-  //   testModels.value.clientWidth,
-  //   testModels.value.clientHeight
-  // );
   boxWidth.value = testModels.value.clientWidth;
   boxHeight.value = testModels.value.clientHeight;
   initThreeModels();

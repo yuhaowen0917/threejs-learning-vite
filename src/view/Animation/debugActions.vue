@@ -149,7 +149,7 @@ loader.load(
     // 遍历模型中的物体
     glb.scene.traverse((child) => {
       if (child.isMesh) {
-        // console.log(child);
+        // console.log("child==>", child);
         if (child.name === "_polySurface260_Base_Del_0") {
           glt_model_child = child;
           console.log(glt_model_child);
@@ -181,7 +181,7 @@ loader.load(
         }
       }
     });
-    tweenAnimation(glb.scene);
+    // tweenAnimation(glb.scene);
 
     scene.add(glb.scene);
   },
