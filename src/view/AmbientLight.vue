@@ -42,25 +42,25 @@ window.addEventListener("resize", () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.shadowMap.enabled = true
+  renderer.shadowMap.enabled = true;
 });
 
 // 创建立方体
 const geometry = new THREE.BoxGeometry(2, 2, 2);
 // const geometry = new THREE.SphereGeometry(3, 32, 16);
 console.log(geometry);
- 
+
 // 创建基础网格材质
 const material = new THREE.MeshPhongMaterial({
   color: 0x0099ff,
-  shininess: 1000,
+  // shininess: 1000,
 });
 
 // Mesh网格
 const cube = new THREE.Mesh(geometry, material);
 cube.position.set(0, 1, 0);
 // 物体接收光源
-cube.receiveShadow = true;
+// cube.receiveShadow = true;
 // 物体投射光源
 cube.castShadow = true;
 
@@ -69,31 +69,41 @@ scene.add(cube);
 // 添加灯光效果
 // 环境光
 const light = new THREE.AmbientLight(0xffffff, 1); // 柔和的白光 color : 颜色, intensity : 光照强度
-
 scene.add(light);
 
 // 点光源
 const point_light = new THREE.PointLight(0xffffff, 400, 100);
 point_light.position.set(5, 5, 5);
 point_light.castShadow = true;
-scene.add( point_light );
+// scene.add(point_light);
+
+const spotLight = new THREE.SpotLight(0xffffff, 400);
+spotLight.position.set(2, 6, 2);
+spotLight.castShadow = true;
+
+spotLight.shadow.mapSize.width = 512;
+spotLight.shadow.mapSize.height = 512;
+spotLight.shadow.camera.near = 5;
+spotLight.shadow.camera.far = 500;
+spotLight.shadow.camera.fov = 3;
+scene.add(spotLight);
 
 // 创建地面
-const ground = new THREE.PlaneGeometry(15, 15); // 模型
+const ground = new THREE.PlaneGeometry(30, 25); // 模型
 const ground_material = new THREE.MeshPhongMaterial({
   color: 0x1b5e20,
-  // shininess: 100
+  shininess: 100
 }); // 材质
 const ground_cube = new THREE.Mesh(ground, ground_material); // 网格
 // cube.position.set(0, 1, 0);
 ground_cube.rotation.x -= Math.PI / 2;
 // 地面设置接收光源
-ground_cube.receiveShadow = true
+ground_cube.receiveShadow = true;
 scene.add(ground_cube);
 
 // 添加网格地面
-const gridHelper = new THREE.GridHelper(20, 20);
-scene.add(gridHelper);
+// const gridHelper = new THREE.GridHelper(20, 20);
+// scene.add(gridHelper);
 
 const render = () => {
   // 渲染场景

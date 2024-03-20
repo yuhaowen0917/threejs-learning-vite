@@ -22,6 +22,9 @@ import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
 import { FXAAShader } from "three/addons/shaders/FXAAShader.js";
 import { SMAAPass } from "three/addons/postprocessing/SMAAPass.js";
 
+// 拖放控制器
+import { DragControls } from "three/addons/controls/DragControls.js";
+
 import * as TWEEN from "@tweenjs/tween.js";
 // 导入动画库
 // import gsap from "gsap";
@@ -51,6 +54,7 @@ onMounted(() => {
   initGuiBox();
 
   // rightClickMoveModel();
+  testModels.value.appendChild(gui.domElement);
 });
 
 // 创建场景
@@ -63,11 +67,11 @@ const camera = new THREE.PerspectiveCamera(
   80,
   window.innerWidth / window.innerHeight,
   0.1,
-  10000
+  10000 * 10
 );
 
 // 初始化相机位置
-camera.position.set(600, 1500, 2000);
+camera.position.set(500, 1500, 1800);
 camera.aspect = window.innerWidth / window.innerHeight;
 camera.lookAt(camera.position); //指相机看向三维中的某个位置
 // 更新摄像头矩阵
@@ -137,12 +141,13 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = false;
 controls.dampingFactor = 0.01;
 controls.enablePan = true; // 启用或禁用摄像机平移，默认为true
+controls.enableRotate = true; // 启用或禁用摄像机水平或垂直旋转。默认值为true
 // controls.autoRotate = true; // 是否自动旋转
 // controls.autoRotateSpeed = 0.01; // 围绕目标旋转的速度将有多快
 controls.update();
 
 // 加入辅助轴，查看3维坐标轴
-const axesHelper = new THREE.AxesHelper(400);
+const axesHelper = new THREE.AxesHelper(1000);
 scene.add(axesHelper);
 
 // 环境光
@@ -436,6 +441,7 @@ const initGtlModels = () => {
 };
 
 // GUI界面
+const gui = new dat.GUI();
 const initGuiBox = () => {
   const controlData = {
     color: "#ffffff",
@@ -445,8 +451,8 @@ const initGuiBox = () => {
     z: 0,
     rotation: 0,
   };
-  const gui = new dat.GUI();
   gui.domElement.id = "gui_box";
+  gui.domElement.style.top = "00px";
   const base_folder = gui.addFolder("base");
   base_folder.addColor(controlData, "color").onChange((value) => {
     baseMaterial.color.set(value);
@@ -575,6 +581,7 @@ document.addEventListener("click", (event) => {
     // 射线涉及到的物体集合
     // console.log(intersects[0].object);
     // intersects[0].object.scale.set(0.5, 0.5, 0.5);
+    // intersects[0].object.material.wireframe = true;
     add_composer([intersects[0].object]);
   } else if (intersects.length === 0) {
     // 点击空白区域的时候就清除高亮效果
@@ -696,6 +703,19 @@ const rightClickMoveModel = (event) => {
     document.removeEventListener("mouseup", onMouseUp, false);
   }
 };
+
+// console.log(j1_model_group);
+// const controls123 = new DragControls(j1_model_group, camera, renderer.domElement);
+
+// controls123.addEventListener("dragstart", function (event) {
+//   console.log(event);
+//   event.j1_model_group.material.emissive.set(0xaaaaaa);
+// });
+
+// controls123.addEventListener("dragend", function (event) {
+//   console.log(event);
+//   event.j1_model_group.material.emissive.set(0x000000);
+// });
 </script>
 
 <style lang="scss">
