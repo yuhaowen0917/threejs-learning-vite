@@ -67,6 +67,12 @@ const routes = [
     component: () => import("../view/work/index.vue"),
     meta: { desc: "WorksModel" },
   },
+  {
+    path: "/import-method",
+    name: "ImportMethod",
+    component: () => import("../view/work/ImportMethod.vue"),
+    meta: { desc: "封装导入模型的方法" },
+  },
 ];
 
 const router = createRouter({
