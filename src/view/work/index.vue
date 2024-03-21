@@ -293,19 +293,26 @@ let roboticArmModel;
 const initGtlModels = () => {
   const group = new THREE.Group(); //实例化一个THREE.Object3D对象
   group.name = "robotic-arm";
-  gltfloader.load("./models/workModels/base.glb", function (glb) {
-    // console.log("glb", glb);
-    glb.scene.traverse((child) => {
-      // console.log("child", child);
-      if (child.isMesh) {
-        child.material = baseMaterial;
-      }
-    });
-    glb.scene.position.set(0, 0, 0);
-    glb.scene.name = "base_model";
-    base_model = glb.scene;
-    group.add(base_model);
-  });
+  gltfloader.load(
+    "./models/workModels/base.glb",
+    function (glb) {
+      // console.log("glb", glb);
+      glb.scene.traverse((child) => {
+        // console.log("child", child);
+        if (child.isMesh) {
+          child.material = baseMaterial;
+        }
+      });
+      glb.scene.position.set(0, 0, 0);
+      glb.scene.name = "base_model";
+      base_model = glb.scene;
+      // console.log(base_model);
+      group.add(base_model);
+    }
+    // (error) => {
+    //   console.error("加载模型出错:", error);
+    // }
+  );
   gltfloader.load("./models/workModels/j1.glb", function (glb) {
     // console.log("glb", glb);
     glb.scene.traverse((child) => {

@@ -1,9 +1,9 @@
 <template>
   <div class="test-three" ref="testModels"></div>
 </template>
-    
-<script setup>
-import { ref, onMounted } from "vue";
+  
+  <script setup>
+import { ref, onMounted, reactive } from "vue";
 
 import * as THREE from "three";
 // 轨道控制器
@@ -12,14 +12,6 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { STLLoader } from "three/addons/loaders/STLLoader.js";
 
 import Stats from "three/addons/libs/stats.module.js";
-// 现后期处理效果
-import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
-import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
-import { OutlinePass } from "three/addons/postprocessing/OutlinePass.js";
-import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
-import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
-import { FXAAShader } from "three/addons/shaders/FXAAShader.js";
-import { SMAAPass } from "three/addons/postprocessing/SMAAPass.js";
 
 import * as TWEEN from "@tweenjs/tween.js";
 // 导入动画库
@@ -45,12 +37,11 @@ onMounted(() => {
 
   // console.log(testModels.value);
 
-  // initStlModels();
-  initGtlModels();
   initGuiBox();
 
-  // rightClickMoveModel();
   testModels.value.appendChild(gui.domElement);
+
+  GtlModelsMethods();
 });
 
 // 创建场景
@@ -87,10 +78,6 @@ window.addEventListener("resize", () => {
   renderer.shadowMap.enabled = true; // 开启阴影渲染功能
 });
 
-// 添加网格地面
-// const gridHelper = new THREE.GridHelper(1000, 1000);
-// scene.add(gridHelper);
-
 // 创建地面
 const ground = new THREE.PlaneGeometry(3000, 2000); // 模型
 const ground_material = new THREE.MeshPhongMaterial({
@@ -98,19 +85,8 @@ const ground_material = new THREE.MeshPhongMaterial({
   shininess: 100,
   side: THREE.DoubleSide, // 允许平面几何体双面渲染
 });
-// const ground_material = new THREE.MeshPhysicalMaterial({
-//   color: 0x484848,
-//   metalness: 1.0,
-//   roughness: 0.5,
-//   clearcoat: 1.0,
-//   clearcoatRoughness: 0.05,
-//   clearcoatNormalScale: 0.1,
-//   side: THREE.DoubleSide, // 允许平面几何体双面渲染
-// });
 const ground_cube = new THREE.Mesh(ground, ground_material); // 网格
 ground_cube.rotation.x -= Math.PI / 2;
-// 地面设置接收光源
-ground_cube.receiveShadow = true;
 ground_cube.name = "ground";
 scene.add(ground_cube);
 
@@ -124,11 +100,7 @@ const render = () => {
   // tick();
 
   // 动画更新 自定义
-  TWEEN.update();
-
-  if (composer) {
-    composer.render(scene, camera);
-  }
+  // TWEEN.update();
 };
 
 // 创建轨道控制器
@@ -138,8 +110,6 @@ controls.enableDamping = false;
 controls.dampingFactor = 0.01;
 controls.enablePan = true; // 启用或禁用摄像机平移，默认为true
 controls.enableRotate = true; // 启用或禁用摄像机水平或垂直旋转。默认值为true
-// controls.autoRotate = true; // 是否自动旋转
-// controls.autoRotateSpeed = 0.01; // 围绕目标旋转的速度将有多快
 controls.update();
 
 // 加入辅助轴，查看3维坐标轴
@@ -167,11 +137,6 @@ point_light.position.set(-500, 800, -500);
 point_light.castShadow = true;
 scene.add(point_light);
 
-// const point_light_1 = new THREE.PointLight(0xffffff, 40000, 0);
-// point_light_1.position.set(100, 1200, -100);
-// point_light_1.castShadow = true;
-// scene.add(point_light_1);
-
 // 动画函数
 const clock = new THREE.Clock();
 let previousTime = 0;
@@ -188,36 +153,7 @@ const tick = () => {
   window.requestAnimationFrame(tick);
 };
 
-const stlloader = new STLLoader();
-const initStlModels = () => {
-  stlloader.load("./models/workModels/base.stl", function (stl) {
-    console.log("stl", stl);
-    var material = baseMaterial;
-    var mesh = new THREE.Mesh(stl, material); //网格模型对象Mesh
-    mesh.rotation.x = -0.5 * Math.PI; //将模型摆正
-    mesh.position.x = 500;
-    scene.add(mesh);
-  });
-  stlloader.load("./models/workModels/j1.stl", function (stl) {
-    var material = j1Material;
-    var mesh = new THREE.Mesh(stl, material);
-    mesh.rotation.x = -0.5 * Math.PI;
-    mesh.position.x = 500;
-    scene.add(mesh);
-  });
-  stlloader.load("./models/workModels/j2.stl", function (stl) {
-    var material = new THREE.MeshLambertMaterial({
-      color: 0x7272ff,
-    });
-    var mesh = new THREE.Mesh(stl, material); //网格模型对象Mesh
-    mesh.rotation.x = -0.5 * Math.PI; //将模型摆正
-    mesh.position.x = 500;
-    scene.add(mesh);
-  });
-};
-
 // 创建GLTF实例
-const gltfloader = new GLTFLoader();
 let base_model;
 let baseMaterial = new THREE.MeshPhysicalMaterial({
   color: 0x2e2e2e,
@@ -284,160 +220,94 @@ j6_model_group.name = "j6_model_group";
 let j6Material = new THREE.MeshStandardMaterial({
   color: 0x2e2e2e,
 });
-let roboticArmModel;
+let roboticArmModel; // 整体模型
 
-const initGtlModels = () => {
-  const group = new THREE.Group(); //实例化一个THREE.Object3D对象
-  group.name = "robotic-arm";
-  gltfloader.load("./models/workModels/base.glb", function (glb) {
-    // console.log("glb", glb);
-    glb.scene.traverse((child) => {
-      // console.log("child", child);
-      if (child.isMesh) {
-        child.material = baseMaterial;
-      }
-    });
-    glb.scene.position.set(0, 0, 0);
-    glb.scene.name = "base_model";
-    base_model = glb.scene;
-    group.add(base_model);
+const gltModelsList = [
+  {
+    name: "base_model",
+    path: "./models/workModels/base.glb",
+    material: baseMaterial,
+  },
+  {
+    name: "j1_model",
+    path: "./models/workModels/j1.glb",
+    material: j1Material,
+  },
+  {
+    name: "j2_model",
+    path: "./models/workModels/j2.glb",
+    material: j2Material,
+  },
+  ,
+  {
+    name: "j3_model",
+    path: "./models/workModels/j3.glb",
+    material: j3Material,
+  },
+  {
+    name: "j4_model",
+    path: "./models/workModels/j4.glb",
+    material: j4Material,
+  },
+  {
+    name: "j5_model",
+    path: "./models/workModels/j5.glb",
+    material: j5Material,
+  },
+  {
+    name: "j6_model",
+    path: "./models/workModels/j6.glb",
+    material: j6Material,
+  },
+];
+
+const GtlModelsMethods = () => {
+  gltModelsList.forEach((item) => {
+    // console.log(item);
+    initGtlModels_new(item.name, item.path, item.material);
   });
-  gltfloader.load("./models/workModels/j1.glb", function (glb) {
-    // console.log("glb", glb);
-    glb.scene.traverse((child) => {
-      if (child.isMesh) {
-        // console.log(child);
-        child.material = j1Material;
-      }
-    });
-    glb.scene.position.set(0, 0, 0);
-    glb.scene.name = "j1_model";
-    j1_model = glb.scene;
-    // group.add(j1_model);
+};
 
-    j1_model_group.add(j1_model.clone());
-    group.add(j1_model_group);
-  });
-  gltfloader.load("./models/workModels/j2.glb", function (glb) {
-    // console.log("glb", glb);
-    glb.scene.traverse((child) => {
-      if (child.isMesh) {
-        child.material = j2Material;
-      }
-    });
-    // glb.scene.scale.set(0.01, 0.01, 0.01);
-    glb.scene.position.set(0, 0, 0);
-    glb.scene.name = "j2_model";
-    j2_model = glb.scene;
-
-    // 先移动整个对象，再将单个模型移回原位，修改旋转点
-    j2_model_group.position.y += 450;
-    j2_model.position.y -= 450;
-
-    j2_model_group.position.x += 75;
-    j2_model.position.x -= 75;
-    // 偏移X = -(box.min.x+ box.max.x) / 2
-    // console.log(new THREE.Box3().setFromObject(j2_model_group.clone()));
-
-    j2_model_group.add(j2_model.clone());
-    j1_model_group.add(j2_model_group);
-  });
-  gltfloader.load("./models/workModels/j3.glb", function (glb) {
-    // console.log("glb", glb);
-    glb.scene.traverse((child) => {
-      if (child.isMesh) {
-        // console.log(child);
-        child.material = j3Material;
-      }
-    });
-    glb.scene.position.set(0, 0, 0);
-    glb.scene.name = "j3_model";
-    j3_model = glb.scene;
-
-    // j3_model_group.position.y -= 450;
-    // j3_model_group.position.x -= 75;
-
-    // j3_model_group.position.y += 1090;
-    j3_model_group.position.y += 640;
-    j3_model.position.y -= 1090;
-
-    // j3_model_group.position.x += 75;
-    j3_model.position.x -= 75;
-
-    j3_model_group.add(j3_model.clone());
-    j2_model_group.add(j3_model_group);
-  });
-  gltfloader.load("./models/workModels/j4.glb", function (glb) {
-    // console.log("glb", glb);
-    glb.scene.traverse((child) => {
-      if (child.isMesh) {
-        child.material = j4Material;
-      }
-    });
-    glb.scene.position.set(0, 0, 0);
-    j4_model = glb.scene;
-    glb.scene.name = "j4_model";
-
-    // j4_model_group.position.y -= 1090;
-    j4_model_group.position.x -= 75;
-
-    // j4_model_group.position.y += 1285;
-    j4_model_group.position.y += 195;
-    j4_model.position.y -= 1285;
-
-    j4_model_group.add(j4_model.clone());
-    j3_model_group.add(j4_model_group);
-  });
-  gltfloader.load("./models/workModels/j5.glb", function (glb) {
-    glb.scene.position.set(0, 0, 0);
-    glb.scene.traverse((child) => {
-      if (child.isMesh) {
-        child.material = j5Material;
-      }
-    });
-    glb.scene.name = "j5_model";
-    j5_model = glb.scene;
-
-    // j5_model_group.position.y -= 1285;
-
-    // j5_model_group.position.y += 1285;
-    j5_model.position.y -= 1285;
-
-    j5_model_group.position.x += 775;
-    j5_model.position.x -= 775;
-
-    j5_model_group.add(j5_model.clone());
-    j4_model_group.add(j5_model_group);
-  });
-  gltfloader.load("./models/workModels/j6.glb", function (glb) {
-    // console.log("glb", glb);
-    glb.scene.traverse((child) => {
-      if (child.isMesh) {
-        child.material = j6Material;
-      }
-    });
-    glb.scene.name = "j6_model";
-    j6_model = glb.scene;
-    glb.scene.position.set(0, 0, 0);
-
-    // j6_model_group.position.y -= 1285;
-    j6_model_group.position.x -= 775;
-
-    // j6_model_group.position.y += 1285;
-    j6_model.position.y -= 1285;
-
-    j6_model_group.add(j6_model.clone());
-    j5_model_group.add(j6_model_group);
-  });
-
-  console.log("机械臂模型==>", group);
+const gltfloader = new GLTFLoader();
+const group = new THREE.Group(); //实例化一个THREE.Object3D对象
+group.name = "robotic-arm";
+/**
+ * 通过获取到的模型数据，直接导入渲染模型
+ * @param name {string} 模型组件的命名
+ * @param path {string} 导入的模型文件路径
+ * @param material {THREE.MeshPhysicalMaterial} 模型组件材质
+ * @return {glb} 导入后模型的数据信息
+ */
+const initGtlModels_new = (name, path, material) => {
+  gltfloader.load(
+    path,
+    function (glb) {
+      glb.scene.traverse((child) => {
+        // console.log("child", child);
+        if (child.isMesh) {
+          child.material = material;
+        }
+      });
+      glb.scene.position.set(0, 0, 0);
+      glb.scene.name = name;
+      group.add(glb.scene);
+    }
+    // (xhr) => {
+    //   // 加载进度
+    //   const percent = xhr.loaded / xhr.total;
+    //   console.log(name + "加载进度" + percent);
+    // }
+  );
+  // console.log("机械臂模型==>", group);
   group.castShadow = true;
   roboticArmModel = group;
-  scene.add(group); //将对象组添加到场景当中
+  // console.log(scene);
+  scene.add(group);
 };
 
 // GUI界面
 const gui = new dat.GUI();
+let association_name = [];
 const initGuiBox = () => {
   const controlData = {
     color: "#ffffff",
@@ -446,7 +316,10 @@ const initGuiBox = () => {
     y: 0,
     z: 0,
     rotation: 0,
+    association: "",
   };
+  association_name = gltModelsList.map((item) => item.name);
+  // gui.close();
   gui.domElement.id = "gui_box";
   gui.domElement.style.top = "00px";
   const base_folder = gui.addFolder("base");
@@ -460,8 +333,21 @@ const initGuiBox = () => {
     .onFinishChange((value) => {
       base_model.visible = value;
     });
+  base_folder.add(controlData, "rotation", -10, 10).onChange((value) => {
+    roboticArmModel.rotation.y = value;
+  });
+  base_folder.add(controlData, "x", -400, 400).onChange((value) => {
+    roboticArmModel.position.x = value;
+  });
+  base_folder
+    .add(controlData, "association", association_name)
+    .name("关联层级")
+    .onChange(function (value) {
+      console.log(value);
+    });
   // base_folder.open();
   const j1_folder = gui.addFolder("j1");
+  // j1_folder.open();
   j1_folder.addColor(controlData, "color").onChange((value) => {
     j1Material.color.set(value);
   });
@@ -474,7 +360,21 @@ const initGuiBox = () => {
   j1_folder.add(controlData, "rotation", -10, 10).onChange((value) => {
     j1_model_group.rotation.y = value;
   });
+  j1_folder
+    .add(controlData, "association", association_name)
+    .name("关联层级")
+    .onChange(function (value) {
+      console.log(value);
+      let models_data = roboticArmModel.children.filter((child) => {
+        if (!child.isMesh && child.name === "j1_model") {
+          return child;
+        }
+      });
+      // console.log(models_data[0]);
+      NestedChildren(value, models_data[0]);
+    });
   const j2_folder = gui.addFolder("j2");
+  // j2_folder.open();
   j2_folder.addColor(controlData, "color").onChange((value) => {
     j2Material.color.set(value);
   });
@@ -482,225 +382,108 @@ const initGuiBox = () => {
     .add(controlData, "visible")
     .name("visible")
     .onFinishChange((value) => {
-      j2_model_group.children[0].visible = value;
+      // j2_model_group.children[0].visible = value;
+      console.log(j2_model_group);
     });
   j2_folder.add(controlData, "rotation", -2, 2).onChange((value) => {
     j2_model_group.rotation.z = value;
   });
-  const j3_folder = gui.addFolder("j3");
-  j3_folder.addColor(controlData, "color").onChange((value) => {
-    j3Material.color.set(value);
-  });
-  j3_folder
-    .add(controlData, "visible")
-    .name("visible")
-    .onFinishChange((value) => {
-      j3_model_group.children[0].visible = value;
+  j2_folder
+    .add(controlData, "association", association_name)
+    .name("关联层级")
+    .onChange(function (value) {
+      console.log(value);
+      let models_data = roboticArmModel.children.filter((child) => {
+        if (!child.isMesh && child.name === "j2_model") {
+          return child;
+        }
+      });
+      // console.log(models_data[0]);
+      NestedChildren(value, models_data[0]);
     });
-  j3_folder.add(controlData, "rotation", -10, 10).onChange((value) => {
-    j3_model_group.rotation.z = value;
-  });
-  // j3_folder.open();
-  const j4_folder = gui.addFolder("j4");
-  j4_folder.addColor(controlData, "color").onChange((value) => {
-    j4Material.color.set(value);
-  });
-  j4_folder
-    .add(controlData, "visible")
-    .name("visible")
-    .onFinishChange((value) => {
-      j4_model_group.children[0].visible = value;
-    });
-  j4_folder.add(controlData, "rotation", -10, 10).onChange((value) => {
-    j4_model_group.rotation.x = value;
-  });
-  const j5_folder = gui.addFolder("j5");
-  j5_folder.addColor(controlData, "color").onChange((value) => {
-    j5Material.color.set(value);
-  });
-  j5_folder
-    .add(controlData, "visible")
-    .name("visible")
-    .onFinishChange((value) => {
-      j5_model_group.children[0].visible = value;
-    });
-  j5_folder.add(controlData, "rotation", -10, 10).onChange((value) => {
-    j5_model_group.rotation.z = value;
-  });
-  const j6_folder = gui.addFolder("j6");
-  j6_folder.addColor(controlData, "color").onChange((value) => {
-    j6Material.color.set(value);
-  });
-  j6_folder
-    .add(controlData, "visible")
-    .name("visible")
-    .onFinishChange((value) => {
-      j6_model_group.children[0].visible = value;
-    });
-  j6_folder.add(controlData, "rotation", -10, 10).onChange((value) => {
-    j6_model_group.rotation.x = value;
-  });
-  const overall_folder = gui.addFolder("overall");
-  overall_folder.add(controlData, "rotation", -10, 10).onChange((value) => {
-    roboticArmModel.rotation.y = value;
-  });
-  overall_folder.add(controlData, "x", -400, 400).onChange((value) => {
-    roboticArmModel.position.x = value;
-  });
+  // const j3_folder = gui.addFolder("j3");
+  // j3_folder.addColor(controlData, "color").onChange((value) => {
+  //   j3Material.color.set(value);
+  // });
+  // j3_folder
+  //   .add(controlData, "visible")
+  //   .name("visible")
+  //   .onFinishChange((value) => {
+  //     j3_model_group.children[0].visible = value;
+  //   });
+  // j3_folder.add(controlData, "rotation", -10, 10).onChange((value) => {
+  //   j3_model_group.rotation.z = value;
+  // });
+  // // j3_folder.open();
+  // const j4_folder = gui.addFolder("j4");
+  // j4_folder.addColor(controlData, "color").onChange((value) => {
+  //   j4Material.color.set(value);
+  // });
+  // j4_folder
+  //   .add(controlData, "visible")
+  //   .name("visible")
+  //   .onFinishChange((value) => {
+  //     j4_model_group.children[0].visible = value;
+  //   });
+  // j4_folder.add(controlData, "rotation", -10, 10).onChange((value) => {
+  //   j4_model_group.rotation.x = value;
+  // });
+  // const j5_folder = gui.addFolder("j5");
+  // j5_folder.addColor(controlData, "color").onChange((value) => {
+  //   j5Material.color.set(value);
+  // });
+  // j5_folder
+  //   .add(controlData, "visible")
+  //   .name("visible")
+  //   .onFinishChange((value) => {
+  //     j5_model_group.children[0].visible = value;
+  //   });
+  // j5_folder.add(controlData, "rotation", -10, 10).onChange((value) => {
+  //   j5_model_group.rotation.z = value;
+  // });
+  // const j6_folder = gui.addFolder("j6");
+  // j6_folder.addColor(controlData, "color").onChange((value) => {
+  //   j6Material.color.set(value);
+  // });
+  // j6_folder
+  //   .add(controlData, "visible")
+  //   .name("visible")
+  //   .onFinishChange((value) => {
+  //     j6_model_group.children[0].visible = value;
+  //   });
+  // j6_folder.add(controlData, "rotation", -10, 10).onChange((value) => {
+  //   j6_model_group.rotation.x = value;
+  // });
 };
 
 console.log("scene==>", scene);
 
-// 点击模型事件
-const raycaster = new THREE.Raycaster();
-const pointer = new THREE.Vector2();
-document.addEventListener("click", (event) => {
-  // console.log(event);
-  // 将鼠标位置归一化为设备坐标。x 和 y 方向的取值范围是 (-1 to +1)
-  pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
-  pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-  // const boundingRect = renderer.domElement.getBoundingClientRect();
-  // console.log(testModels.value.getBoundingClientRect());
-  // console.log(
-  //   pointer.x, pointer.y,
-  //   ((event.clientX - boundingRect.left) / boundingRect.width) * 2 - 1,
-  //   -((event.clientY - boundingRect.top) / boundingRect.height) * 2 + 1
-  // );
-
-  // 通过摄像机和鼠标位置更新射线
-  raycaster.setFromCamera(pointer, camera);
-  // 计算物体和射线的焦点
-  const intersects = raycaster.intersectObjects(scene.children);
-  // console.log(intersects);
-  if (intersects.length > 0) {
-    // 射线涉及到的物体集合
-    // console.log(intersects[0].object);
-    // intersects[0].object.scale.set(0.5, 0.5, 0.5);
-    // intersects[0].object.material.wireframe = true;
-    add_composer([intersects[0].object]);
-  } else if (intersects.length === 0) {
-    // 点击空白区域的时候就清除高亮效果
-    add_composer([]);
-  }
-});
-
-// 模型选中高亮 边缘高光
-let composer;
-let outlinePass;
-let renderPass;
-let effectFXAA;
-let smaaPass;
-
-// 模型高亮描边方法
-const add_composer = (selectedObjects) => {
-  // selectedObjects 点击的模型数据 []
-  // 创建一个EffectComposer（效果组合器）对象，然后在该对象上添加后期处理通道。
-  composer = new EffectComposer(renderer);
-
-  // 新建一个场景通道  为了覆盖到原来的场景上
-  renderPass = new RenderPass(scene, camera);
-  composer.addPass(renderPass);
-
-  // 物体边缘发光通道
-  outlinePass = new OutlinePass(
-    new THREE.Vector2(window.innerWidth, window.innerHeight),
-    scene,
-    camera
-  );
-  outlinePass.selectedObjects = selectedObjects;
-  outlinePass.visibleEdgeColor.set(parseInt(0xfffbfb)); // 呼吸显示的颜色
-  outlinePass.hiddenEdgeColor = new THREE.Color(0, 0, 0); // 呼吸消失的颜色
-  outlinePass.edgeStrength = 10.0; // 边框的亮度
-  outlinePass.edgeGlow = 0.6; // 光晕[0,1]
-  outlinePass.usePatternTexture = false; // 是否使用父级的材质
-  outlinePass.edgeThickness = 1.0; // 边框宽度
-  outlinePass.downSampleRatio = 1; // 边框弯曲度
-  outlinePass.pulsePeriod = 5; // 呼吸闪烁的速度
-  outlinePass.clear = true;
-  composer.addPass(outlinePass);
-
-  // 解决高亮后环境变暗的问题
-  const outputPass = new OutputPass();
-  composer.addPass(outputPass);
-
-  // 自定义的着色器通道 作为参数
-  effectFXAA = new ShaderPass(FXAAShader);
-  effectFXAA.uniforms["resolution"].value.set(
-    1 / window.innerWidth,
-    1 / window.innerHeight
-  );
-  effectFXAA.renderToScreen = true;
-  composer.addPass(effectFXAA);
-
-  // 抗锯齿
-  smaaPass = new SMAAPass();
-  composer.addPass(smaaPass);
-};
-
-//双击控制屏幕进入全屏, 退出全屏
-window.addEventListener("dblclick", () => {
-  // document.fullscreenElement; 进入全屏之后的canvans DOM元素
-  const fullscreenElement = document.fullscreenElement;
-
-  if (fullscreenElement) {
-    //退出全屏, 使用document对象
-    document.exitFullscreen();
-  } else {
-    //让画布对象全屏  此处renderer为three.js渲染器
-    // renderer.domElement.requestFullscreen();
-    // console.log(testModels.value);
-    testModels.value.requestFullscreen();
-  }
-});
-
-// rightClickMoveModel
-const rightClickMoveModel = (event) => {
-  // 用来记录鼠标的初始位置
-  let mouseX0 = 0;
-  let mouseY0 = 0;
-
-  // 监听鼠标的contextmenu事件（右键点击）
-  renderer.domElement.addEventListener("contextmenu", function (event) {
-    event.preventDefault(); // 阻止默认的右键菜单弹出
-    // console.log('1');
-    // 记录鼠标的初始位置
-    mouseX0 = event.clientX;
-    mouseY0 = event.clientY;
-
-    // 添加鼠标移动事件监听
-    document.addEventListener("mousemove", onMouseMove, false);
-    // 添加鼠标松开事件监听
-    document.addEventListener("mouseup", onMouseUp, false);
+/**
+ * 关联嵌套模型的方法 将模型一层层嵌套添加到上一个模型关节的children中
+ * @param name {string} 被选择关联模型的name值
+ * @param models {THREE.Group} 需要被关联的模型的值
+ */
+const NestedChildren = (name, models) => {
+  roboticArmModel.children.forEach((item) => {
+    if (item.name === name) {
+      console.log(item);
+      // 手动添加模型分组，添加后再将原本整体模型中的组件数据删除
+      const model_group = new THREE.Object3D();
+      model_group.name = name + "_group";
+      model_group.add(models.clone());
+      roboticArmModel.add(model_group);
+      roboticArmModel.remove(models);
+      console.log(roboticArmModel);
+      // 更新下拉框列表
+    }
+    // 判断group分组是否已存在
+    // if (item.name === name + "_group") {
+    //   console.log("选择对象已被嵌套");
+    // }
   });
-
-  // 鼠标移动事件处理函数
-  function onMouseMove(event) {
-    // 计算鼠标移动的距离
-    const dx = event.clientX - mouseX0;
-    const dy = event.clientY - mouseY0;
-
-    // 根据鼠标移动的距离来更新摄像机的位置
-    // 这里只是简单地将摄像机在x和z轴上进行平移
-    // 你可能需要根据实际需求调整平移的逻辑
-    camera.position.x -= dx * 10;
-    camera.position.y += dy * 10;
-
-    // 更新鼠标的当前位置
-    mouseX0 = event.clientX;
-    mouseY0 = event.clientY;
-  }
-
-  // 鼠标松开事件处理函数
-  function onMouseUp(event) {
-    // 移除鼠标移动事件监听
-    document.removeEventListener("mousemove", onMouseMove, false);
-    // 移除鼠标松开事件监听
-    document.removeEventListener("mouseup", onMouseUp, false);
-  }
 };
 </script>
-  
+
 <style lang="scss">
 .btn-box {
   position: absolute;
