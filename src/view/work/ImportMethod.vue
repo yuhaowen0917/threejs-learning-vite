@@ -480,6 +480,7 @@ console.log("scene==>", scene);
 const NestedChildren = (name, models) => {
   if (models && name !== models.name) {
     roboticArmModel.children.forEach((item) => {
+      console.log(item.type, models.type);
       if (item.name === name) {
         console.log(name, models);
 
@@ -503,13 +504,14 @@ const NestedChildren = (name, models) => {
         //   (item) => item !== models.name
         // );
         // association_name.value = new_association_name;
+
         console.log(roboticArmModel);
 
         // 更新下拉框列表
         association_name.value = [];
         roboticArmModel.children.forEach((item) => {
           association_name.value.push(item.name);
-          // console.log(item.name);
+          // console.log(item.type);
         });
       }
       // 判断group分组是否已存在
@@ -535,7 +537,7 @@ const selectChange = (value, item) => {
 // 设置树形模型数据
 const treeModels_array = ref([]);
 const treeModelsData = (val) => {
-  console.log(val.length);
+  // console.log(val.length);
   // val.children.forEach((item) => {
   //   treeModels_array.value.push(item.name);
   //   console.log(item);
