@@ -9,7 +9,7 @@ const back = () => {
 </script>
 
 <template>
-  <div class="back-btn" @click="back">返回</div>
+  <div class="back-btn" @click="back">返回导航栏</div>
   <router-view></router-view>
 </template>
 
@@ -18,7 +18,7 @@ const back = () => {
   position: absolute;
   left: 50px;
   bottom: 20px;
-  width: 70px;
+  width: 85px;
   height: 30px;
   line-height: 30px;
   border: 2px solid #4566fa;
@@ -27,5 +27,6 @@ const back = () => {
   text-align: center;
   cursor: pointer;
   color: #ffffff;
+  font-size: 14px;
 }
 </style>

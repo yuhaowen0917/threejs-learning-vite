@@ -1,24 +1,48 @@
 <template>
   <div class="test-three" ref="testModels"></div>
+  <div style="position: absolute; bottom: 80px; right: 50px; color: #ffffff">
+    <div v-for="item1 in association_name" :key="item1">
+      {{ item1 }}
+      <div>
+        设置关联
+        <el-select
+          v-model="tets_value"
+          placeholder="Select"
+          size="small"
+          style="width: 200px"
+          @change="(val) => selectChange(val, item1)"
+        >
+          <el-option
+            v-for="item in association_name"
+            :key="item"
+            :label="item"
+            :value="item"
+          />
+        </el-select>
+      </div>
+    </div>
+    <div>{{ treeModels_array }}</div>
+  </div>
 </template>
   
-  <script setup>
+<script setup>
 import { ref, onMounted, reactive } from "vue";
 
 import * as THREE from "three";
 // 轨道控制器
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { STLLoader } from "three/addons/loaders/STLLoader.js";
 
 import Stats from "three/addons/libs/stats.module.js";
 
-import * as TWEEN from "@tweenjs/tween.js";
+// import * as TWEEN from "@tweenjs/tween.js";
 // 导入动画库
 // import gsap from "gsap";
 
 // 导入 dat.gui
 import * as dat from "dat.gui";
+
+const tets_value = ref("");
 
 // 性能监视器
 const stats = new Stats();
@@ -36,12 +60,11 @@ onMounted(() => {
   testModels.value.appendChild(stats.domElement);
 
   // console.log(testModels.value);
-
-  initGuiBox();
-
   testModels.value.appendChild(gui.domElement);
 
   GtlModelsMethods();
+
+  initGuiBox();
 });
 
 // 创建场景
@@ -154,7 +177,6 @@ const tick = () => {
 };
 
 // 创建GLTF实例
-let base_model;
 let baseMaterial = new THREE.MeshPhysicalMaterial({
   color: 0x2e2e2e,
   metalness: 1.0,
@@ -163,9 +185,6 @@ let baseMaterial = new THREE.MeshPhysicalMaterial({
   clearcoatRoughness: 0.05,
   clearcoatNormalScale: 0.1,
 });
-let j1_model;
-const j1_model_group = new THREE.Object3D();
-j1_model_group.name = "j1_model_group";
 let j1Material = new THREE.MeshPhysicalMaterial({
   color: 0x00ff00,
   metalness: 1.0,
@@ -174,16 +193,10 @@ let j1Material = new THREE.MeshPhysicalMaterial({
   clearcoatRoughness: 0.05,
   // clearcoatNormalScale: 0.1
 });
-let j2_model;
-const j2_model_group = new THREE.Object3D();
-j2_model_group.name = "j2_model_group";
 let j2Material = new THREE.MeshPhongMaterial({
   color: 0xcd39cd,
   shininess: 1000,
 });
-let j3_model;
-const j3_model_group = new THREE.Object3D();
-j3_model_group.name = "j3_model_group";
 let j3Material = new THREE.MeshPhysicalMaterial({
   color: 0xdd0d0d,
   metalness: 1.0,
@@ -192,9 +205,6 @@ let j3Material = new THREE.MeshPhysicalMaterial({
   clearcoatRoughness: 0.05,
   clearcoatNormalScale: 0.1,
 });
-let j4_model;
-const j4_model_group = new THREE.Object3D();
-j4_model_group.name = "j4_model_group";
 let j4Material = new THREE.MeshPhysicalMaterial({
   color: 0xffeeff,
   metalness: 1.0,
@@ -203,9 +213,6 @@ let j4Material = new THREE.MeshPhysicalMaterial({
   clearcoatRoughness: 0.05,
   clearcoatNormalScale: 0.1,
 });
-let j5_model;
-const j5_model_group = new THREE.Object3D();
-j5_model_group.name = "j5_model_group";
 let j5Material = new THREE.MeshPhysicalMaterial({
   color: 0xf0ea2b,
   metalness: 1.0,
@@ -214,9 +221,6 @@ let j5Material = new THREE.MeshPhysicalMaterial({
   clearcoatRoughness: 0.05,
   clearcoatNormalScale: 0.1,
 });
-let j6_model;
-const j6_model_group = new THREE.Object3D();
-j6_model_group.name = "j6_model_group";
 let j6Material = new THREE.MeshStandardMaterial({
   color: 0x2e2e2e,
 });
@@ -238,7 +242,6 @@ const gltModelsList = [
     path: "./models/workModels/j2.glb",
     material: j2Material,
   },
-  ,
   {
     name: "j3_model",
     path: "./models/workModels/j3.glb",
@@ -303,11 +306,12 @@ const initGtlModels_new = (name, path, material) => {
   roboticArmModel = group;
   // console.log(scene);
   scene.add(group);
+  treeModelsData(group.children);
 };
 
 // GUI界面
 const gui = new dat.GUI();
-let association_name = [];
+let association_name = ref([]);
 const initGuiBox = () => {
   const controlData = {
     color: "#ffffff",
@@ -318,8 +322,8 @@ const initGuiBox = () => {
     rotation: 0,
     association: "",
   };
-  association_name = gltModelsList.map((item) => item.name);
-  // gui.close();
+  association_name.value = gltModelsList.map((item) => item.name);
+  gui.close();
   gui.domElement.id = "gui_box";
   gui.domElement.style.top = "00px";
   const base_folder = gui.addFolder("base");
@@ -340,7 +344,7 @@ const initGuiBox = () => {
     roboticArmModel.position.x = value;
   });
   base_folder
-    .add(controlData, "association", association_name)
+    .add(controlData, "association", association_name.value)
     .name("关联层级")
     .onChange(function (value) {
       console.log(value);
@@ -361,16 +365,14 @@ const initGuiBox = () => {
     j1_model_group.rotation.y = value;
   });
   j1_folder
-    .add(controlData, "association", association_name)
+    .add(controlData, "association", association_name.value)
     .name("关联层级")
     .onChange(function (value) {
-      console.log(value);
       let models_data = roboticArmModel.children.filter((child) => {
         if (!child.isMesh && child.name === "j1_model") {
           return child;
         }
       });
-      // console.log(models_data[0]);
       NestedChildren(value, models_data[0]);
     });
   const j2_folder = gui.addFolder("j2");
@@ -389,31 +391,42 @@ const initGuiBox = () => {
     j2_model_group.rotation.z = value;
   });
   j2_folder
-    .add(controlData, "association", association_name)
+    .add(controlData, "association", association_name.value)
     .name("关联层级")
     .onChange(function (value) {
-      console.log(value);
       let models_data = roboticArmModel.children.filter((child) => {
         if (!child.isMesh && child.name === "j2_model") {
+          return child;
+        }
+      });
+      // console.log(value, models_data[0]);
+      NestedChildren(value, models_data[0]);
+    });
+  const j3_folder = gui.addFolder("j3");
+  j3_folder.addColor(controlData, "color").onChange((value) => {
+    j3Material.color.set(value);
+  });
+  j3_folder
+    .add(controlData, "visible")
+    .name("visible")
+    .onFinishChange((value) => {
+      j3_model_group.children[0].visible = value;
+    });
+  j3_folder.add(controlData, "rotation", -10, 10).onChange((value) => {
+    j3_model_group.rotation.z = value;
+  });
+  j3_folder
+    .add(controlData, "association", association_name.value)
+    .name("关联层级")
+    .onChange(function (value) {
+      let models_data = roboticArmModel.children.filter((child) => {
+        if (!child.isMesh && child.name === "j3_model") {
           return child;
         }
       });
       // console.log(models_data[0]);
       NestedChildren(value, models_data[0]);
     });
-  // const j3_folder = gui.addFolder("j3");
-  // j3_folder.addColor(controlData, "color").onChange((value) => {
-  //   j3Material.color.set(value);
-  // });
-  // j3_folder
-  //   .add(controlData, "visible")
-  //   .name("visible")
-  //   .onFinishChange((value) => {
-  //     j3_model_group.children[0].visible = value;
-  //   });
-  // j3_folder.add(controlData, "rotation", -10, 10).onChange((value) => {
-  //   j3_model_group.rotation.z = value;
-  // });
   // // j3_folder.open();
   // const j4_folder = gui.addFolder("j4");
   // j4_folder.addColor(controlData, "color").onChange((value) => {
@@ -460,27 +473,73 @@ console.log("scene==>", scene);
 
 /**
  * 关联嵌套模型的方法 将模型一层层嵌套添加到上一个模型关节的children中
- * @param name {string} 被选择关联模型的name值
- * @param models {THREE.Group} 需要被关联的模型的值
+ * 手动添加模型分组，添加后再将原本整体模型中的组件数据删除
+ * @param name {string} 选择关联模型的 name 值
+ * @param models {THREE.Group} 需要关联的模型的值, models 去关联绑定 name 在被关联后就无法再次被点击关联
  */
 const NestedChildren = (name, models) => {
-  roboticArmModel.children.forEach((item) => {
-    if (item.name === name) {
-      console.log(item);
-      // 手动添加模型分组，添加后再将原本整体模型中的组件数据删除
-      const model_group = new THREE.Object3D();
-      model_group.name = name + "_group";
-      model_group.add(models.clone());
-      roboticArmModel.add(model_group);
-      roboticArmModel.remove(models);
-      console.log(roboticArmModel);
-      // 更新下拉框列表
+  if (models && name !== models.name) {
+    roboticArmModel.children.forEach((item) => {
+      if (item.name === name) {
+        console.log(name, models);
+
+        // 关联模型创建一个分组对象
+        const model_group = new THREE.Object3D();
+        model_group.name = models.name + "_group";
+        model_group.add(models.clone());
+
+        // 被关联模型创建一个分组对象
+        const model_group1 = new THREE.Object3D();
+        model_group1.name = name + "_group";
+        model_group1.add(item.clone());
+        model_group1.add(model_group);
+
+        // item.position.x = 500;
+        roboticArmModel.add(model_group1);
+        roboticArmModel.remove(models); // 清除原本的模型group对象
+        roboticArmModel.remove(item); // 清除被关联模型group对象
+
+        // const new_association_name = association_name.value.filter(
+        //   (item) => item !== models.name
+        // );
+        // association_name.value = new_association_name;
+        console.log(roboticArmModel);
+
+        // 更新下拉框列表
+        association_name.value = [];
+        roboticArmModel.children.forEach((item) => {
+          association_name.value.push(item.name);
+          // console.log(item.name);
+        });
+      }
+      // 判断group分组是否已存在
+    });
+  } else {
+    console.log("自己无法关联自己", name, models);
+  }
+};
+
+// 下拉框选中值
+const selectChange = (value, item) => {
+  // console.log(value, item); // value 选中值 item 类别
+  console.log(item + "去关联" + value);
+  let models_data = roboticArmModel.children.filter((child) => {
+    if (!child.isMesh && child.name === item) {
+      return child;
     }
-    // 判断group分组是否已存在
-    // if (item.name === name + "_group") {
-    //   console.log("选择对象已被嵌套");
-    // }
   });
+  // console.log(value, models_data[0]);
+  NestedChildren(value, models_data[0]);
+};
+
+// 设置树形模型数据
+const treeModels_array = ref([]);
+const treeModelsData = (val) => {
+  console.log(val.length);
+  // val.children.forEach((item) => {
+  //   treeModels_array.value.push(item.name);
+  //   console.log(item);
+  // });
 };
 </script>
 
