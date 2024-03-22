@@ -1,6 +1,6 @@
 <template>
   <div class="test-three" ref="testModels"></div>
-  <div style="position: absolute; bottom: 80px; right: 50px; color: #ffffff">
+  <div style="position: absolute; bottom: 30px; right: 50px; color: #ffffff">
     <div v-for="(item1, index1) in association_name" :key="index1">
       {{ item1 }}
       <div>
@@ -20,10 +20,15 @@
           />
         </el-select>
       </div>
-      <!-- <div style="display: flex;">
-        移动
-        <el-slider v-model="slider_value" :min=-200 :max=200 />
-      </div> -->
+      <div style="display: flex">
+        <span style="font-size: 12px; width: 25%">移动</span>
+        <el-slider
+          v-model="slider_value"
+          :min="-200"
+          :max="200"
+          @input="(val) => moveSlider(val, item1)"
+        />
+      </div>
     </div>
     <!-- <div>{{ treeModels_array }}</div> -->
   </div>
@@ -485,7 +490,7 @@ console.log("scene==>", scene);
  * @param item {string} 需要关联的模型的值, models 去关联绑定 name； 在被关联后就无法再次被点击关联
  */
 const NestedChildren = (value, item) => {
-  console.log(value, item);
+  // console.log(value, item);
   let models; // 被关联的模型
   let models1; // 寻求关联的模型
   // 遍历所有子模型，不管多少层 获取到需要去关联的模型
@@ -502,33 +507,58 @@ const NestedChildren = (value, item) => {
       return;
     }
   });
+  if (models && models1) {
+    // 关联模型创建一个分组对象
+    const model_group = new THREE.Object3D();
+    model_group.name = item + "_group";
+    model_group.add(models1.clone());
+    const parent = models1.parent;
 
-  // 关联模型创建一个分组对象
-  const model_group = new THREE.Object3D();
-  model_group.name = item + "_group";
-  model_group.add(models1.clone());
-  const parent = models1.parent;
+    // 被关联模型创建一个分组对象
+    const model_group1 = new THREE.Object3D();
+    model_group1.name = value + "_group";
+    model_group1.add(models.clone());
+    model_group1.add(model_group);
+    const parent1 = models.parent; // 被关联模型的父对象
 
-  // 被关联模型创建一个分组对象
-  const model_group1 = new THREE.Object3D();
-  model_group1.name = value + "_group";
-  model_group1.add(models.clone());
-  model_group1.add(model_group);
-  const parent1 = models.parent; // 被关联模型的父对象
-
-  console.log(parent.name, parent1.name);
-  if (parent1.name === value + "_group") {
-    console.log("已存在被关联模型组件的分组对象，无需再次创建");
-    parent1.add(model_group);
-    parent.remove(models1);
-    // parent1.remove(models);
-  } else {
-    parent1.add(model_group1);
-    parent.remove(models1);
-    parent1.remove(models);
+    console.log(parent.name, parent1.name);
+    if (parent1.name === value + "_group") {
+      // 已存在被关联模型组件的分组对象，无需再次创建，直接导入需求关联的模型
+      // console.log("已存在被关联模型组件的分组对象");
+      parent1.add(model_group);
+      parent.remove(models1);
+      // parent1.remove(models);
+    } else if (parent.name === item + "_group") {
+      /* 
+        进行一种情况的判断，当object3D原本是存在的，此次修改只是切换关联对象，
+        只删除了原本的Group 但是未删除 object3D ，留下个空壳子,
+        要清除干净，不留痕迹
+        还得携带着原本关联的对象一起切换，拖家带口
+      */
+      const parent_parent = parent.parent;
+      // console.log("切换关联对象", parent_parent);
+      let move_model;
+      roboticArmModel.traverse((child) => {
+        if (child instanceof THREE.Object3D && child.name === parent.name) {
+          move_model = child;
+          return;
+        }
+      });
+      // console.log(move_model, parent.name, models.name, model_group1);
+      parent_parent.remove(parent);
+      model_group1.add(move_model);
+      parent1.add(model_group1.remove(model_group)); // 加入的应该是原本的 object3D 无需新建，迁移
+      parent1.remove(models);
+      // console.log(move_model, model_group1.remove(model_group));
+    } else {
+      parent1.add(model_group1);
+      parent.remove(models1);
+      parent1.remove(models);
+    }
   }
 
-  console.log(models, models1, roboticArmModel);
+  // console.log(models, models1, roboticArmModel);
+  console.log(roboticArmModel);
 
   // 选项列表
   association_name.value = [];
@@ -570,6 +600,26 @@ const treeModelsData = (val) => {
   //   console.log(item);
   // });
 };
+
+// 移动滑块
+const moveSlider = (val, item) => {
+  // console.log(val, item);
+  let model;
+  roboticArmModel.traverse((child) => {
+    if (child instanceof THREE.Group && child.name === item) {
+      // console.log(child);
+      model = child;
+      return;
+    }
+  });
+  // 判断父级对象是否是分组的,是的话，移动整个分组；不是则移动单个模型组件
+  if (model.parent.name === item + "_group") {
+    model.parent.position.x = val;
+  } else {
+    model.position.x = val;
+  }
+  // console.log(model, model.parent.name);
+};
 </script>
 
 <style lang="scss">
@@ -582,5 +632,8 @@ const treeModelsData = (val) => {
   position: absolute;
   right: 0;
   width: 300px;
+}
+.el-slider {
+  height: 20px;
 }
 </style>

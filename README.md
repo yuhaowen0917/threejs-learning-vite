@@ -346,3 +346,58 @@ function removeObjectFromScene(root, objectToRemove) {
 // 使用上面的函数来删除对象  
 removeObjectFromScene(yourSceneOrGroup, objectToRemove);
 ```
+
+```javascript
+/**
+ * 关联嵌套模型的方法 将模型一层层嵌套添加到上一个模型关节的children中
+ * 手动添加模型分组，添加后再将原本整体模型中的组件数据删除
+ * @param value {string} 选择 被 关联模型的 name 值
+ * @param item {string} 需要关联的模型的值, models 去关联绑定 name； 在被关联后就无法再次被点击关联
+ */
+const NestedChildren = (value, item) => {
+  console.log(value, item);
+  let models; // 被关联的模型
+  let models1; // 寻求关联的模型
+  // 遍历所有子模型，不管多少层 获取到需要去关联的模型
+  roboticArmModel.traverse((child) => {
+    if (child instanceof THREE.Group && child.name === value) {
+      // console.log(child);
+      models = child;
+      return;
+    }
+  });
+  roboticArmModel.traverse((child) => {
+    if (child instanceof THREE.Group && child.name === item) {
+      models1 = child;
+      return;
+    }
+  });
+
+  // 关联模型创建一个分组对象
+  const model_group = new THREE.Object3D();
+  model_group.name = item + "_group";
+  model_group.add(models1.clone());
+  const parent = models1.parent;
+
+  // 被关联模型创建一个分组对象
+  const model_group1 = new THREE.Object3D();
+  model_group1.name = value + "_group";
+  model_group1.add(models.clone());
+  model_group1.add(model_group);
+  const parent1 = models.parent; // 被关联模型的父对象
+
+  console.log(parent.name, parent1.name);
+  if (parent1.name === value + "_group") {
+    console.log("已存在被关联模型组件的分组对象，无需再次创建");
+    parent1.add(model_group);
+    parent.remove(models1);
+    // parent1.remove(models);
+  } else {
+    parent1.add(model_group1);
+    parent.remove(models1);
+    parent1.remove(models);
+  }
+
+  console.log(models, models1, roboticArmModel);
+};
+```
