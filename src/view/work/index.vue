@@ -458,6 +458,7 @@ const initGuiBox = () => {
     z: 0,
     rotation: 0,
   };
+  gui.close();
   gui.domElement.id = "gui_box";
   gui.domElement.style.top = "00px";
   const base_folder = gui.addFolder("base");

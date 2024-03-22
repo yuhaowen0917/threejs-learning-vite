@@ -1,7 +1,10 @@
 <script setup>
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 
 const router = useRouter();
+const route = useRoute();
+
+console.log(route);
 
 const back = () => {
   router.push("/");
@@ -9,7 +12,7 @@ const back = () => {
 </script>
 
 <template>
-  <div class="back-btn" @click="back">返回导航栏</div>
+  <div class="back-btn" @click="back" v-if="route.path !== '/'">返回导航栏</div>
   <router-view></router-view>
 </template>
 

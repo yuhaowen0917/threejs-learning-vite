@@ -1,36 +1,67 @@
 <template>
-  <div class="test-three" ref="testModels"></div>
-  <div style="position: absolute; bottom: 30px; right: 50px; color: #ffffff">
-    <div v-for="(item1, index1) in association_name" :key="index1">
-      {{ item1 }}
-      <div>
-        设置关联
-        <el-select
-          v-model="tets_value"
-          placeholder="Select"
-          size="small"
-          style="width: 150px"
-          @change="(val) => selectChange(val, item1)"
-        >
-          <el-option
-            v-for="(item, index) in association_name"
-            :key="index"
-            :label="item"
-            :value="item"
+  <div class="test-three" ref="testModels">
+    <div
+      style="
+        position: absolute;
+        bottom: 10px;
+        right: 40px;
+        color: #ffffff;
+        font-size: 12px;
+        z-index: 1000;
+      "
+    >
+      <div v-for="(item1, index1) in association_name" :key="index1">
+        {{ item1 }}
+        <div>
+          设置关联
+          <el-select
+            v-model="tets_value"
+            placeholder="Select"
+            size="small"
+            style="width: 150px"
+            @change="(val) => selectChange(val, item1)"
+          >
+            <el-option
+              v-for="(item, index) in association_name"
+              :key="index"
+              :label="item"
+              :value="item"
+            />
+          </el-select>
+        </div>
+        <div style="display: flex">
+          <span style="width: 25%">移动</span>
+          <el-slider
+            v-model="slider_value"
+            :min="-400"
+            :max="400"
+            @input="(val) => moveSlider(val, item1)"
           />
-        </el-select>
+        </div>
+        <div style="display: flex">
+          <span style="width: 25%">旋转</span>
+          <el-slider
+            v-model="rotate_value"
+            :min="-10"
+            :max="10"
+            @input="(val) => rotateModel(val, item1)"
+          />
+        </div>
+        <div style="display: flex" class="rotate-center">
+          <span>
+            <el-input v-model="x_position" placeholder="x" />
+          </span>
+          <span>
+            <el-input v-model="y_position" placeholder="y" />
+          </span>
+          <span>
+            <el-input v-model="z_position" placeholder="z" />
+          </span>
+          <span @click="debugRotateCenter(item1)">确定</span>
+        </div>
       </div>
-      <div style="display: flex">
-        <span style="font-size: 12px; width: 25%">移动</span>
-        <el-slider
-          v-model="slider_value"
-          :min="-200"
-          :max="200"
-          @input="(val) => moveSlider(val, item1)"
-        />
-      </div>
+      <!-- <div>{{ treeModels_array }}</div> -->
     </div>
-    <!-- <div>{{ treeModels_array }}</div> -->
   </div>
 </template>
   
@@ -53,6 +84,11 @@ import * as dat from "dat.gui";
 
 const tets_value = ref("");
 const slider_value = ref(0);
+const rotate_value = ref(0);
+
+const x_position = ref(0);
+const y_position = ref(0);
+const z_position = ref(0);
 
 // 性能监视器
 const stats = new Stats();
@@ -439,46 +475,6 @@ const initGuiBox = () => {
       // console.log(models_data[0]);
       NestedChildren(value, models_data[0]);
     });
-  // // j3_folder.open();
-  // const j4_folder = gui.addFolder("j4");
-  // j4_folder.addColor(controlData, "color").onChange((value) => {
-  //   j4Material.color.set(value);
-  // });
-  // j4_folder
-  //   .add(controlData, "visible")
-  //   .name("visible")
-  //   .onFinishChange((value) => {
-  //     j4_model_group.children[0].visible = value;
-  //   });
-  // j4_folder.add(controlData, "rotation", -10, 10).onChange((value) => {
-  //   j4_model_group.rotation.x = value;
-  // });
-  // const j5_folder = gui.addFolder("j5");
-  // j5_folder.addColor(controlData, "color").onChange((value) => {
-  //   j5Material.color.set(value);
-  // });
-  // j5_folder
-  //   .add(controlData, "visible")
-  //   .name("visible")
-  //   .onFinishChange((value) => {
-  //     j5_model_group.children[0].visible = value;
-  //   });
-  // j5_folder.add(controlData, "rotation", -10, 10).onChange((value) => {
-  //   j5_model_group.rotation.z = value;
-  // });
-  // const j6_folder = gui.addFolder("j6");
-  // j6_folder.addColor(controlData, "color").onChange((value) => {
-  //   j6Material.color.set(value);
-  // });
-  // j6_folder
-  //   .add(controlData, "visible")
-  //   .name("visible")
-  //   .onFinishChange((value) => {
-  //     j6_model_group.children[0].visible = value;
-  //   });
-  // j6_folder.add(controlData, "rotation", -10, 10).onChange((value) => {
-  //   j6_model_group.rotation.x = value;
-  // });
 };
 
 console.log("scene==>", scene);
@@ -564,7 +560,7 @@ const NestedChildren = (value, item) => {
   association_name.value = [];
   // 遍历所有子对象无论多少层 Group 和 Object3D 都有
   roboticArmModel.traverse(function (child) {
-    if (!child.isMesh) {
+    if (child instanceof THREE.Group && child.name !== "robotic-arm") {
       association_name.value.push(child.name);
       // console.log(child.name);
     }
@@ -615,10 +611,76 @@ const moveSlider = (val, item) => {
   // 判断父级对象是否是分组的,是的话，移动整个分组；不是则移动单个模型组件
   if (model.parent.name === item + "_group") {
     model.parent.position.x = val;
+    // .translateX() .rotateX ()
   } else {
     model.position.x = val;
   }
   // console.log(model, model.parent.name);
+};
+
+// 模型旋转
+const rotateModel = (val, item) => {
+  // console.log(val, item);
+  let model;
+  roboticArmModel.traverse((child) => {
+    if (child instanceof THREE.Group && child.name === item) {
+      model = child;
+      return;
+    }
+  });
+  // 判断父级对象是否是分组的,是的话，旋转整个分组；不是则旋转单个模型组件
+  if (model.parent.name === item + "_group") {
+    model.parent.rotateZ(val);
+  } else {
+    model.rotateZ(val);
+  }
+};
+
+/**
+ * 设置模型组件的旋转中心，如果有 Object3D 分组，则是对分组的位置进行修改调整，设置旋转中心
+ * @param item {string} 选中的模型 name
+ */
+const debugRotateCenter = (item) => {
+  console.log(x_position.value, y_position.value, z_position.value, item);
+  let x_move, y_move, z_move;
+  x_move = Number(x_position.value);
+  y_move = Number(y_position.value);
+  z_move = Number(z_position.value);
+  let rotate_model;
+  roboticArmModel.traverse((child) => {
+    if (child instanceof THREE.Group && child.name === item) {
+      // console.log(child);
+      rotate_model = child;
+      return;
+    }
+  });
+  // 判断父级分组
+  let parent_model;
+  if (rotate_model.parent) {
+    parent_model = rotate_model.parent;
+    console.log(rotate_model, parent_model);
+    if (parent_model.name === item + "_group") {
+      console.log(
+        "修改分组的位置",
+        rotate_model.position,
+        parent_model.position
+      );
+      parent_model.position.x += x_move;
+      parent_model.position.y += y_move;
+      parent_model.position.z += z_move;
+
+      rotate_model.position.x -= x_move;
+      rotate_model.position.y -= y_move;
+      rotate_model.position.z -= z_move;
+      console.log(roboticArmModel);
+    } else {
+      console.log(
+        "修改模型的位置",
+        rotate_model.position,
+        parent_model.position
+      );
+    }
+  }
 };
 </script>
 
@@ -633,7 +695,31 @@ const moveSlider = (val, item) => {
   right: 0;
   width: 300px;
 }
-.el-slider {
-  height: 20px;
+.test-three {
+  .el-slider {
+    height: 20px;
+    .el-slider__button-wrapper {
+      width: 20px;
+      height: 20px;
+      top: -8px;
+      .el-slider__button {
+        width: 15px;
+        height: 15px;
+      }
+    }
+  }
+  .rotate-center {
+    justify-content: space-around;
+    .el-input {
+      width: 45px;
+      .el-input__wrapper {
+        padding: 0;
+        input {
+          text-align: center;
+          height: 22px;
+        }
+      }
+    }
+  }
 }
 </style>
