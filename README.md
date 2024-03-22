@@ -257,11 +257,10 @@ canvas.addEventListener("click", (event) => {
 
 ### 自定义鼠标右键平移模型效果
 
-部分浏览器会出现鼠标手势的问题，无法正常进行右键平移模型,
-
-所以通过自定义鼠标事件，来实现完成平移模型的效果，
-
+部分浏览器会出现鼠标手势的问题，无法正常进行右键平移模型,  
+所以通过自定义鼠标事件，来实现完成平移模型的效果，  
 但是目前移动是有缺陷的，鼠标右键点击松开后开始平移
+
 
 ```javascript
 const rightClickMoveModel = (event) => {
@@ -311,4 +310,39 @@ const rightClickMoveModel = (event) => {
     document.removeEventListener("mouseup", onMouseUp, false);
   }
 };
+```
+
+### 三维物体（Object3D）组（Group）
+
+可以通过.add( object )方法来将对象进行组合，该方法将对象添加为子对象，但为此最好使用Group（来作为父对象）。
+
+.remove ( object : Object3D )
+从当前对象的子级中移除对象。可以移除任意数量的对象。
+
+.traverse ( callback : Function )
+callback - 以一个object3D对象作为第一个参数的函数。  
+遍历 model 的所有子对象 无论多少层  
+traverse方法会递归地遍历根对象的所有子对象，并且对于每个子对象执行提供的回调函数。  
+当找到要删除的对象时，我们从它的父对象中调用remove方法来删除它。
+
+```javascript
+function removeObjectFromScene(root, objectToRemove) {  
+  // 遍历root的所有子对象  
+  root.traverse(function(child) {  
+    // 如果找到要删除的对象  
+    if (child === objectToRemove) {  
+      // 从父对象中移除它  
+      const parent = child.parent;  
+      if (parent) {  
+        parent.remove(child);  
+      }  
+    }  
+  });  
+}  
+  
+// 假设你有一个名为objectToRemove的对象，你想从整个场景或某个Group中删除它  
+// 你需要知道这个对象或者能够通过某种方式识别它（比如通过名字或其他属性）  
+  
+// 使用上面的函数来删除对象  
+removeObjectFromScene(yourSceneOrGroup, objectToRemove);
 ```

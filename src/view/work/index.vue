@@ -3,7 +3,7 @@
   <!-- <div class="btn-box"></div> -->
 </template>
   
-  <script setup>
+<script setup>
 import { ref, onMounted } from "vue";
 
 import * as THREE from "three";

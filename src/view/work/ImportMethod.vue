@@ -1,7 +1,7 @@
 <template>
   <div class="test-three" ref="testModels"></div>
   <div style="position: absolute; bottom: 80px; right: 50px; color: #ffffff">
-    <div v-for="item1 in association_name" :key="item1">
+    <div v-for="(item1, index1) in association_name" :key="index1">
       {{ item1 }}
       <div>
         设置关联
@@ -9,19 +9,23 @@
           v-model="tets_value"
           placeholder="Select"
           size="small"
-          style="width: 200px"
+          style="width: 150px"
           @change="(val) => selectChange(val, item1)"
         >
           <el-option
-            v-for="item in association_name"
-            :key="item"
+            v-for="(item, index) in association_name"
+            :key="index"
             :label="item"
             :value="item"
           />
         </el-select>
       </div>
+      <!-- <div style="display: flex;">
+        移动
+        <el-slider v-model="slider_value" :min=-200 :max=200 />
+      </div> -->
     </div>
-    <div>{{ treeModels_array }}</div>
+    <!-- <div>{{ treeModels_array }}</div> -->
   </div>
 </template>
   
@@ -43,6 +47,7 @@ import Stats from "three/addons/libs/stats.module.js";
 import * as dat from "dat.gui";
 
 const tets_value = ref("");
+const slider_value = ref(0);
 
 // 性能监视器
 const stats = new Stats();
@@ -274,6 +279,7 @@ const GtlModelsMethods = () => {
 const gltfloader = new GLTFLoader();
 const group = new THREE.Group(); //实例化一个THREE.Object3D对象
 group.name = "robotic-arm";
+
 /**
  * 通过获取到的模型数据，直接导入渲染模型
  * @param name {string} 模型组件的命名
@@ -281,6 +287,7 @@ group.name = "robotic-arm";
  * @param material {THREE.MeshPhysicalMaterial} 模型组件材质
  * @return {glb} 导入后模型的数据信息
  */
+
 const initGtlModels_new = (name, path, material) => {
   gltfloader.load(
     path,
@@ -474,64 +481,102 @@ console.log("scene==>", scene);
 /**
  * 关联嵌套模型的方法 将模型一层层嵌套添加到上一个模型关节的children中
  * 手动添加模型分组，添加后再将原本整体模型中的组件数据删除
- * @param name {string} 选择关联模型的 name 值
- * @param models {THREE.Group} 需要关联的模型的值, models 去关联绑定 name 在被关联后就无法再次被点击关联
+ * @param name {string} 选择被关联模型的 name 值
+ * @param models {THREE.Group} 需要关联的模型的值, models 去关联绑定 name； 在被关联后就无法再次被点击关联
  */
 const NestedChildren = (name, models) => {
-  if (models && name !== models.name) {
-    roboticArmModel.children.forEach((item) => {
-      console.log(item.type, models.type);
-      if (item.name === name) {
-        console.log(name, models);
+  // if (models && name !== models.name) {
+  //   roboticArmModel.traverse((item) => {
+  //     // console.log(item.type, models.type);
+  //     // 如果是group
+  //     if (item instanceof THREE.Group && !item.isMesh && item.name === name) {
+  //       // console.log("绑定的是 Group 对象", name + " --> " + models.name);
+  //       console.log("绑定的是 Group 对象", name, models);
 
-        // 关联模型创建一个分组对象
-        const model_group = new THREE.Object3D();
-        model_group.name = models.name + "_group";
-        model_group.add(models.clone());
+  //       // 关联模型创建一个分组对象
+  //       const model_group = new THREE.Object3D();
+  //       model_group.name = models.name + "_group";
+  //       model_group.add(models.clone());
 
-        // 被关联模型创建一个分组对象
-        const model_group1 = new THREE.Object3D();
-        model_group1.name = name + "_group";
-        model_group1.add(item.clone());
-        model_group1.add(model_group);
+  //       const parent = models.parent; // 关联模型的父对象
+  //       // console.log(parent, models);
 
-        // item.position.x = 500;
-        roboticArmModel.add(model_group1);
-        roboticArmModel.remove(models); // 清除原本的模型group对象
-        roboticArmModel.remove(item); // 清除被关联模型group对象
+  //       // 被关联模型创建一个分组对象
+  //       const model_group1 = new THREE.Object3D();
+  //       model_group1.name = name + "_group";
+  //       model_group1.add(item.clone());
+  //       model_group1.add(model_group);
 
-        // const new_association_name = association_name.value.filter(
-        //   (item) => item !== models.name
-        // );
-        // association_name.value = new_association_name;
+  //       const parent1 = item.parent; // 被关联模型的父对象
+  //       if (parent && parent1) {
+  //         parent1.add(model_group1);
+  //         parent.remove(models); // 清除原本的模型group对象
+  //         parent1.remove(item); // 清除被关联模型group对象
+  //       }
+  //     }
+  //     // 判断group分组 Object3D 是否已存在
+  //     // if (item.type === "Object3D" && item.name === name) {
+  //     //   console.log("绑定到已有的分组", item, name);
+  //     //   // 关联模型创建一个分组对象
+  //     //   console.log(models.parent, models);
+  //     //   const parent = models.parent; // 父对象
+  //     //   const model_group = new THREE.Object3D();
+  //     //   model_group.name = models.name + "_group";
+  //     //   model_group.add(models.clone());
+  //     //   item.add(model_group);
+  //     //   parent.remove(models);
+  //     // }
+  //   });
 
-        console.log(roboticArmModel);
+  //   // 选项列表
+  //   association_name.value = [];
+  //   // 遍历所有子对象无论多少层 Group 和 Object3D 都有
+  //   roboticArmModel.traverse(function (child) {
+  //     if (!child.isMesh) {
+  //       association_name.value.push(child.name);
+  //       // console.log(child.name);
+  //     }
+  //   });
 
-        // 更新下拉框列表
-        association_name.value = [];
-        roboticArmModel.children.forEach((item) => {
-          association_name.value.push(item.name);
-          // console.log(item.type);
-        });
-      }
-      // 判断group分组是否已存在
-    });
-  } else {
-    console.log("自己无法关联自己", name, models);
-  }
+  //   console.log("整体模型", roboticArmModel);
+  // } else {
+  //   console.log("自己无法关联自己", name, models);
+  // }
+
+  console.log(name, models);
+  // roboticArmModel.traverse((child)=>{
+  //   console.log(child);
+  // })
 };
 
 // 下拉框选中值
 const selectChange = (value, item) => {
   // console.log(value, item); // value 选中值 item 类别
   console.log(item + "去关联" + value);
-  let models_data = roboticArmModel.children.filter((child) => {
-    if (!child.isMesh && child.name === item) {
-      return child;
+  // 只能遍历一层
+  // let models_data = roboticArmModel.children.filter((child) => {
+  //   if (!child.isMesh && child.name === item) {
+  //     return child;
+  //   }
+  // });
+  // // console.log(value, models_data[0]);
+  // NestedChildren(value, models_data[0]);
+
+  // 遍历所有子模型，不管多少层 获取到需要去关联的模型
+  let a, b;
+  roboticArmModel.traverse((child) => {
+    if (child instanceof THREE.Group && child.name === value) {
+      a = child;
+      return;
     }
   });
-  // console.log(value, models_data[0]);
-  NestedChildren(value, models_data[0]);
+  roboticArmModel.traverse((child) => {
+    if (child instanceof THREE.Group && child.name === item) {
+      b = child;
+      return;
+    }
+  });
+  console.log(a, b);
 };
 
 // 设置树形模型数据
