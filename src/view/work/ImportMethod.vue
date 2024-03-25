@@ -66,7 +66,7 @@
 </template>
   
 <script setup>
-import { ref, onMounted, reactive } from "vue";
+import { ref, onMounted, reactive, computed } from "vue";
 
 import * as THREE from "three";
 // 轨道控制器
@@ -377,40 +377,18 @@ const initGuiBox = () => {
   const base_folder = gui.addFolder("base");
   base_folder.addColor(controlData, "color").onChange((value) => {
     baseMaterial.color.set(value);
-    // console.log(base_model);
   });
-  base_folder
-    .add(controlData, "visible")
-    .name("visible")
-    .onFinishChange((value) => {
-      base_model.visible = value;
-    });
   base_folder.add(controlData, "rotation", -10, 10).onChange((value) => {
     roboticArmModel.rotation.y = value;
   });
   base_folder.add(controlData, "x", -400, 400).onChange((value) => {
     roboticArmModel.position.x = value;
   });
-  base_folder
-    .add(controlData, "association", association_name.value)
-    .name("关联层级")
-    .onChange(function (value) {
-      console.log(value);
-    });
   // base_folder.open();
   const j1_folder = gui.addFolder("j1");
   // j1_folder.open();
   j1_folder.addColor(controlData, "color").onChange((value) => {
     j1Material.color.set(value);
-  });
-  j1_folder
-    .add(controlData, "visible")
-    .name("visible")
-    .onFinishChange((value) => {
-      j1_model_group.children[0].visible = value;
-    });
-  j1_folder.add(controlData, "rotation", -10, 10).onChange((value) => {
-    j1_model_group.rotation.y = value;
   });
   j1_folder
     .add(controlData, "association", association_name.value)
@@ -429,16 +407,6 @@ const initGuiBox = () => {
     j2Material.color.set(value);
   });
   j2_folder
-    .add(controlData, "visible")
-    .name("visible")
-    .onFinishChange((value) => {
-      // j2_model_group.children[0].visible = value;
-      console.log(j2_model_group);
-    });
-  j2_folder.add(controlData, "rotation", -2, 2).onChange((value) => {
-    j2_model_group.rotation.z = value;
-  });
-  j2_folder
     .add(controlData, "association", association_name.value)
     .name("关联层级")
     .onChange(function (value) {
@@ -453,15 +421,6 @@ const initGuiBox = () => {
   const j3_folder = gui.addFolder("j3");
   j3_folder.addColor(controlData, "color").onChange((value) => {
     j3Material.color.set(value);
-  });
-  j3_folder
-    .add(controlData, "visible")
-    .name("visible")
-    .onFinishChange((value) => {
-      j3_model_group.children[0].visible = value;
-    });
-  j3_folder.add(controlData, "rotation", -10, 10).onChange((value) => {
-    j3_model_group.rotation.z = value;
   });
   j3_folder
     .add(controlData, "association", association_name.value)
@@ -487,22 +446,8 @@ console.log("scene==>", scene);
  */
 const NestedChildren = (value, item) => {
   // console.log(value, item);
-  let models; // 被关联的模型
-  let models1; // 寻求关联的模型
-  // 遍历所有子模型，不管多少层 获取到需要去关联的模型
-  roboticArmModel.traverse((child) => {
-    if (child instanceof THREE.Group && child.name === value) {
-      // console.log(child);
-      models = child;
-      return;
-    }
-  });
-  roboticArmModel.traverse((child) => {
-    if (child instanceof THREE.Group && child.name === item) {
-      models1 = child;
-      return;
-    }
-  });
+  let models = findModel(value); // 被关联的模型
+  let models1 = findModel(item); // 寻求关联的模型
   if (models && models1) {
     // 关联模型创建一个分组对象
     const model_group = new THREE.Object3D();
@@ -597,17 +542,14 @@ const treeModelsData = (val) => {
   // });
 };
 
-// 移动滑块
+/**
+ * 模型移动事件 判断是哪个模型
+ * @param val {string} 旋转的值
+ * @param item {string} 选中的模型 name
+ */
 const moveSlider = (val, item) => {
-  // console.log(val, item);
-  let model;
-  roboticArmModel.traverse((child) => {
-    if (child instanceof THREE.Group && child.name === item) {
-      // console.log(child);
-      model = child;
-      return;
-    }
-  });
+  console.log(val, item);
+  let model = findModel(item);
   // 判断父级对象是否是分组的,是的话，移动整个分组；不是则移动单个模型组件
   if (model.parent.name === item + "_group") {
     model.parent.position.x = val;
@@ -618,22 +560,33 @@ const moveSlider = (val, item) => {
   // console.log(model, model.parent.name);
 };
 
-// 模型旋转
+/**
+ * 模型旋转事件 判断模型 不同模型组件旋转绕轴不同
+ * @param val {string} 旋转的值
+ * @param item {string} 选中的模型 name
+ */
 const rotateModel = (val, item) => {
-  // console.log(val, item);
-  let model;
-  roboticArmModel.traverse((child) => {
-    if (child instanceof THREE.Group && child.name === item) {
-      model = child;
-      return;
-    }
-  });
+  console.log(val, item);
+  let model = findModel(item);
   // 判断父级对象是否是分组的,是的话，旋转整个分组；不是则旋转单个模型组件
   if (model.parent.name === item + "_group") {
     model.parent.rotateZ(val);
   } else {
     model.rotateZ(val);
   }
+};
+
+// 根据传递的组件的name值，遍历整体模型中的所有子模型 不管多少层 获取到需要去关联的模型
+const findModel = (name) => {
+  console.log(name); // 进行操作的模型名称
+  let model;
+  roboticArmModel.traverse((child) => {
+    if (child instanceof THREE.Group && child.name === name) {
+      model = child;
+      return;
+    }
+  });
+  return model;
 };
 
 /**
@@ -646,19 +599,13 @@ const debugRotateCenter = (item) => {
   x_move = Number(x_position.value);
   y_move = Number(y_position.value);
   z_move = Number(z_position.value);
-  let rotate_model;
-  roboticArmModel.traverse((child) => {
-    if (child instanceof THREE.Group && child.name === item) {
-      // console.log(child);
-      rotate_model = child;
-      return;
-    }
-  });
+  let rotate_model = findModel(item);
   // 判断父级分组
   let parent_model;
   if (rotate_model.parent) {
     parent_model = rotate_model.parent;
     console.log(rotate_model, parent_model);
+    // 判断是否存在分组的Object3D，存在即修改分组的旋转中心，不存在即直接修改模型组件的旋转中心
     if (parent_model.name === item + "_group") {
       console.log(
         "修改分组的位置",
