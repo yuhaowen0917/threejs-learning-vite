@@ -6,67 +6,68 @@
         bottom: 10px;
         right: 40px;
         color: #ffffff;
-        font-size: 12px;
+        font-size: 14px;
         z-index: 1000;
       "
     >
+      <!-- <el-tree :data="treeModels_array" :props="defaultProps"></el-tree> -->
+      <div>当前选中的模型：{{ selectModelName }}</div>
       <div v-for="(item1, index1) in association_name" :key="index1">
         {{ item1 }}
-        <div>
-          设置关联
-          <el-select
-            v-model="tets_value"
-            placeholder="Select"
-            size="small"
-            style="width: 150px"
-            @change="(val) => selectChange(val, item1)"
-          >
-            <el-option
-              v-for="(item, index) in association_name"
-              :key="index"
-              :label="item"
-              :value="item"
-            />
-          </el-select>
-        </div>
-        <div style="display: flex">
-          <span style="width: 25%">移动</span>
-          <el-slider
-            v-model="slider_value"
-            :min="-400"
-            :max="400"
-            @input="(val) => moveSlider(val, item1)"
-          />
-        </div>
-        <div style="display: flex">
-          <span style="width: 25%">旋转</span>
-          <el-slider
-            v-model="rotate_value"
-            :min="-10"
-            :max="10"
-            @input="(val) => rotateModel(val, item1)"
-          />
-        </div>
-        <div style="display: flex" class="rotate-center">
-          <span>
-            <el-input v-model="x_position" placeholder="x" />
-          </span>
-          <span>
-            <el-input v-model="y_position" placeholder="y" />
-          </span>
-          <span>
-            <el-input v-model="z_position" placeholder="z" />
-          </span>
-          <span @click="debugRotateCenter(item1)">确定</span>
-        </div>
       </div>
-      <!-- <div>{{ treeModels_array }}</div> -->
+      <div>
+        设置关联
+        <el-select
+          v-model="tets_value"
+          placeholder="Select"
+          size="small"
+          style="width: 150px"
+          @change="(val) => selectChange(val, selectModelName)"
+        >
+          <el-option
+            v-for="(item, index) in association_name"
+            :key="index"
+            :label="item"
+            :value="item"
+          />
+        </el-select>
+      </div>
+      <div style="display: flex">
+        <span style="width: 25%">移动</span>
+        <el-slider
+          v-model="slider_value"
+          :min="-400"
+          :max="400"
+          @input="(val) => moveSlider(val, selectModelName)"
+        />
+      </div>
+      <div style="display: flex">
+        <span style="width: 25%">旋转</span>
+        <el-slider
+          v-model="rotate_value"
+          :min="-10"
+          :max="10"
+          @input="(val) => rotateModel(val, selectModelName)"
+        />
+      </div>
+      <div style="display: flex" class="rotate-center">
+        <span>
+          <el-input v-model="x_position" placeholder="x" />
+        </span>
+        <span>
+          <el-input v-model="y_position" placeholder="y" />
+        </span>
+        <span>
+          <el-input v-model="z_position" placeholder="z" />
+        </span>
+        <span @click="debugRotateCenter(selectModelName)">确定</span>
+      </div>
     </div>
   </div>
 </template>
   
 <script setup>
-import { ref, onMounted, reactive, computed } from "vue";
+import { ref, onMounted, reactive, computed, watch } from "vue";
 
 import * as THREE from "three";
 // 轨道控制器
@@ -82,6 +83,15 @@ import Stats from "three/addons/libs/stats.module.js";
 // 导入 dat.gui
 import * as dat from "dat.gui";
 
+// 现后期处理效果
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { OutlinePass } from "three/addons/postprocessing/OutlinePass.js";
+import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
+import { FXAAShader } from "three/addons/shaders/FXAAShader.js";
+import { SMAAPass } from "three/addons/postprocessing/SMAAPass.js";
+
 const tets_value = ref("");
 const slider_value = ref(0);
 const rotate_value = ref(0);
@@ -89,6 +99,9 @@ const rotate_value = ref(0);
 const x_position = ref(0);
 const y_position = ref(0);
 const z_position = ref(0);
+
+// 选中的模型值
+const selectModelName = ref("");
 
 // 性能监视器
 const stats = new Stats();
@@ -170,6 +183,10 @@ const render = () => {
 
   // 动画更新 自定义
   // TWEEN.update();
+
+  if (composer) {
+    composer.render(scene, camera);
+  }
 };
 
 // 创建轨道控制器
@@ -354,12 +371,12 @@ const initGtlModels_new = (name, path, material) => {
   roboticArmModel = group;
   // console.log(scene);
   scene.add(group);
-  treeModelsData(group.children);
+  // treeModelsData(roboticArmModel);
 };
 
 // GUI界面
 const gui = new dat.GUI();
-let association_name = ref([]);
+const association_name = ref([]);
 const initGuiBox = () => {
   const controlData = {
     color: "#ffffff",
@@ -390,53 +407,18 @@ const initGuiBox = () => {
   j1_folder.addColor(controlData, "color").onChange((value) => {
     j1Material.color.set(value);
   });
-  j1_folder
-    .add(controlData, "association", association_name.value)
-    .name("关联层级")
-    .onChange(function (value) {
-      let models_data = roboticArmModel.children.filter((child) => {
-        if (!child.isMesh && child.name === "j1_model") {
-          return child;
-        }
-      });
-      NestedChildren(value, models_data[0]);
-    });
   const j2_folder = gui.addFolder("j2");
   // j2_folder.open();
   j2_folder.addColor(controlData, "color").onChange((value) => {
     j2Material.color.set(value);
   });
-  j2_folder
-    .add(controlData, "association", association_name.value)
-    .name("关联层级")
-    .onChange(function (value) {
-      let models_data = roboticArmModel.children.filter((child) => {
-        if (!child.isMesh && child.name === "j2_model") {
-          return child;
-        }
-      });
-      // console.log(value, models_data[0]);
-      NestedChildren(value, models_data[0]);
-    });
   const j3_folder = gui.addFolder("j3");
   j3_folder.addColor(controlData, "color").onChange((value) => {
     j3Material.color.set(value);
   });
-  j3_folder
-    .add(controlData, "association", association_name.value)
-    .name("关联层级")
-    .onChange(function (value) {
-      let models_data = roboticArmModel.children.filter((child) => {
-        if (!child.isMesh && child.name === "j3_model") {
-          return child;
-        }
-      });
-      // console.log(models_data[0]);
-      NestedChildren(value, models_data[0]);
-    });
 };
 
-console.log("scene==>", scene);
+console.log("Scene==>", scene);
 
 /**
  * 关联嵌套模型的方法 将模型一层层嵌套添加到上一个模型关节的children中
@@ -453,7 +435,7 @@ const NestedChildren = (value, item) => {
     const model_group = new THREE.Object3D();
     model_group.name = item + "_group";
     model_group.add(models1.clone());
-    const parent = models1.parent;
+    const parent = models1.parent; // 需要关联模型的父对象
 
     // 被关联模型创建一个分组对象
     const model_group1 = new THREE.Object3D();
@@ -462,13 +444,30 @@ const NestedChildren = (value, item) => {
     model_group1.add(model_group);
     const parent1 = models.parent; // 被关联模型的父对象
 
-    console.log(parent.name, parent1.name);
+    // console.log(parent.name, parent1.name);
     if (parent1.name === value + "_group") {
       // 已存在被关联模型组件的分组对象，无需再次创建，直接导入需求关联的模型
-      // console.log("已存在被关联模型组件的分组对象");
-      parent1.add(model_group);
-      parent.remove(models1);
-      // parent1.remove(models);
+      // 一种是迁移分组，一种是在原本的分组中添加新的子组件
+      console.log("已存在被关联模型组件的分组对象");
+      let object_group;
+      roboticArmModel.traverse((child) => {
+        if (child instanceof THREE.Object3D && child.name === item + "_group") {
+          console.log(child.name, item + "_group");
+          object_group = child;
+          return;
+        }
+      });
+      // console.log(object_group);
+      if (object_group) {
+        parent1.add(object_group); // 加入的应该是之前的object分组，包含里面已分组的模型组件
+        parent.remove(object_group); // 删除的也应该是包含已分组模型组件的object分组
+        console.log("需要关联的对象分组已创建");
+      } else {
+        console.log("需要关联的对象没有创建分组");
+        parent1.add(model_group);
+        parent.remove(models1);
+        // parent1.remove(models);
+      }
     } else if (parent.name === item + "_group") {
       /* 
         进行一种情况的判断，当object3D原本是存在的，此次修改只是切换关联对象，
@@ -477,7 +476,7 @@ const NestedChildren = (value, item) => {
         还得携带着原本关联的对象一起切换，拖家带口
       */
       const parent_parent = parent.parent;
-      // console.log("切换关联对象", parent_parent);
+      console.log("object3D原本是存在的,切换关联对象", parent_parent);
       let move_model;
       roboticArmModel.traverse((child) => {
         if (child instanceof THREE.Object3D && child.name === parent.name) {
@@ -492,6 +491,7 @@ const NestedChildren = (value, item) => {
       parent1.remove(models);
       // console.log(move_model, model_group1.remove(model_group));
     } else {
+      console.log("普普通通的关联对象");
       parent1.add(model_group1);
       parent.remove(models1);
       parent1.remove(models);
@@ -499,7 +499,7 @@ const NestedChildren = (value, item) => {
   }
 
   // console.log(models, models1, roboticArmModel);
-  console.log(roboticArmModel);
+  console.log("切换后的整体模型数据", roboticArmModel);
 
   // 选项列表
   association_name.value = [];
@@ -516,30 +516,15 @@ const NestedChildren = (value, item) => {
 const selectChange = (value, item) => {
   // console.log(value, item); // value 选中值 item 类别
   console.log(item + "去关联" + value);
-  // 只能遍历一层
-  // let models_data = roboticArmModel.children.filter((child) => {
-  //   if (!child.isMesh && child.name === item) {
-  //     return child;
-  //   }
-  // });
-  // // console.log(value, models_data[0]);
-  // NestedChildren(value, models_data[0]);
-
-  if (value === item) {
-    console.log("自己无法关联自己", value, item);
+  if (item) {
+    if (value === item) {
+      console.log("自己无法关联自己", value, item);
+    } else {
+      NestedChildren(value, item);
+    }
   } else {
-    NestedChildren(value, item);
+    console.log("请选择需要操作的模型组件");
   }
-};
-
-// 设置树形模型数据
-const treeModels_array = ref([]);
-const treeModelsData = (val) => {
-  // console.log(val.length);
-  // val.children.forEach((item) => {
-  //   treeModels_array.value.push(item.name);
-  //   console.log(item);
-  // });
 };
 
 /**
@@ -548,16 +533,20 @@ const treeModelsData = (val) => {
  * @param item {string} 选中的模型 name
  */
 const moveSlider = (val, item) => {
-  console.log(val, item);
-  let model = findModel(item);
-  // 判断父级对象是否是分组的,是的话，移动整个分组；不是则移动单个模型组件
-  if (model.parent.name === item + "_group") {
-    model.parent.position.x = val;
-    // .translateX() .rotateX ()
+  // console.log(val, item);
+  if (item) {
+    let model = findModel(item);
+    // 判断父级对象是否是分组的,是的话，移动整个分组；不是则移动单个模型组件
+    if (model.parent.name === item + "_group") {
+      model.parent.position.x = val;
+      // .translateX() .rotateX ()
+    } else {
+      model.position.x = val;
+    }
+    // console.log(model, model.parent.name);
   } else {
-    model.position.x = val;
+    console.log("请选择需要操作的模型组件");
   }
-  // console.log(model, model.parent.name);
 };
 
 /**
@@ -566,19 +555,37 @@ const moveSlider = (val, item) => {
  * @param item {string} 选中的模型 name
  */
 const rotateModel = (val, item) => {
-  console.log(val, item);
-  let model = findModel(item);
-  // 判断父级对象是否是分组的,是的话，旋转整个分组；不是则旋转单个模型组件
-  if (model.parent.name === item + "_group") {
-    model.parent.rotateZ(val);
+  // console.log(val, item);
+  if (item) {
+    let model = findModel(item);
+    // 判断父级对象是否是分组的,是的话，旋转整个分组；不是则旋转单个模型组件
+    if (item === "base_model" || item === "j1_model") {
+      if (model.parent.name === item + "_group") {
+        model.parent.rotation.y = val;
+      } else {
+        model.rotation.y = val;
+      }
+    } else if (item === "j4_model") {
+      if (model.parent.name === item + "_group") {
+        model.parent.rotation.x = val;
+      } else {
+        model.rotation.x = val;
+      }
+    } else {
+      if (model.parent.name === item + "_group") {
+        model.parent.rotation.z = val;
+      } else {
+        model.rotation.z = val;
+      }
+    }
   } else {
-    model.rotateZ(val);
+    console.log("请选择需要操作的模型组件");
   }
 };
 
 // 根据传递的组件的name值，遍历整体模型中的所有子模型 不管多少层 获取到需要去关联的模型
 const findModel = (name) => {
-  console.log(name); // 进行操作的模型名称
+  // console.log(name); // 进行操作的模型名称
   let model;
   roboticArmModel.traverse((child) => {
     if (child instanceof THREE.Group && child.name === name) {
@@ -595,40 +602,171 @@ const findModel = (name) => {
  */
 const debugRotateCenter = (item) => {
   console.log(x_position.value, y_position.value, z_position.value, item);
-  let x_move, y_move, z_move;
-  x_move = Number(x_position.value);
-  y_move = Number(y_position.value);
-  z_move = Number(z_position.value);
-  let rotate_model = findModel(item);
-  // 判断父级分组
-  let parent_model;
-  if (rotate_model.parent) {
-    parent_model = rotate_model.parent;
-    console.log(rotate_model, parent_model);
-    // 判断是否存在分组的Object3D，存在即修改分组的旋转中心，不存在即直接修改模型组件的旋转中心
-    if (parent_model.name === item + "_group") {
-      console.log(
-        "修改分组的位置",
-        rotate_model.position,
-        parent_model.position
-      );
-      parent_model.position.x += x_move;
-      parent_model.position.y += y_move;
-      parent_model.position.z += z_move;
+  // 判断是否选择模型
+  if (item) {
+    let x_move, y_move, z_move;
+    x_move = Number(x_position.value);
+    y_move = Number(y_position.value);
+    z_move = Number(z_position.value);
+    let rotate_model = findModel(item);
+    // 判断父级分组
+    let parent_model;
+    if (rotate_model.parent) {
+      parent_model = rotate_model.parent;
+      console.log(rotate_model, parent_model);
+      // 判断是否存在分组的Object3D，存在即修改分组的旋转中心，不存在即直接修改模型组件的旋转中心
+      if (parent_model.name === item + "_group") {
+        console.log(
+          "修改分组的位置",
+          rotate_model.position,
+          parent_model.position
+        );
 
-      rotate_model.position.x -= x_move;
-      rotate_model.position.y -= y_move;
-      rotate_model.position.z -= z_move;
+        // parent_model.position.set(0, 0, 0);
+        // rotate_model.position.set(0, 0, 0);
+
+        parent_model.position.x += x_move;
+        parent_model.position.y += y_move;
+        parent_model.position.z += z_move;
+
+        // rotate_model.position.x -= x_move;
+        // rotate_model.position.y -= y_move;
+        // rotate_model.position.z -= z_move;
+
+        // 遍历该分组中.children的所有子模型
+        parent_model.children.forEach((item) => {
+          // console.log(item);
+          item.position.x -= x_move;
+          item.position.y -= y_move;
+          item.position.z -= z_move;
+        });
+      } else {
+        console.log(
+          "修改模型的位置",
+          rotate_model.position,
+          parent_model.position
+        );
+      }
       console.log(roboticArmModel);
-    } else {
-      console.log(
-        "修改模型的位置",
-        rotate_model.position,
-        parent_model.position
-      );
     }
+  } else {
+    console.log("请选择需要操作的模型组件");
   }
 };
+
+// 点击模型事件
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+document.addEventListener("click", (event) => {
+  // console.log(event);
+  // 将鼠标位置归一化为设备坐标。x 和 y 方向的取值范围是 (-1 to +1)
+  pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+  pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+  // 通过摄像机和鼠标位置更新射线
+  raycaster.setFromCamera(pointer, camera);
+  // 计算物体和射线的焦点
+  const intersects = raycaster.intersectObjects(scene.children);
+  if (intersects.length > 0) {
+    // 射线涉及到的物体集合
+    add_composer([intersects[0].object]);
+    // console.log(intersects[0].object);
+    clickGetModelInfo(intersects[0].object);
+  } else if (intersects.length === 0) {
+    // 点击空白区域的时候就清除高亮效果
+    add_composer([]);
+  }
+});
+
+// 模型选中高亮 边缘高光
+let composer;
+let outlinePass;
+let renderPass;
+let effectFXAA;
+let smaaPass;
+
+// 模型高亮描边方法
+const add_composer = (selectedObjects) => {
+  composer = new EffectComposer(renderer);
+
+  // 新建一个场景通道  为了覆盖到原来的场景上
+  renderPass = new RenderPass(scene, camera);
+  composer.addPass(renderPass);
+
+  // 物体边缘发光通道
+  outlinePass = new OutlinePass(
+    new THREE.Vector2(window.innerWidth, window.innerHeight),
+    scene,
+    camera
+  );
+  outlinePass.selectedObjects = selectedObjects;
+  outlinePass.visibleEdgeColor.set(parseInt(0xfffbfb)); // 呼吸显示的颜色
+  outlinePass.hiddenEdgeColor = new THREE.Color(0, 0, 0); // 呼吸消失的颜色
+  outlinePass.edgeStrength = 10.0; // 边框的亮度
+  outlinePass.edgeGlow = 0.6; // 光晕[0,1]
+  outlinePass.usePatternTexture = false; // 是否使用父级的材质
+  outlinePass.edgeThickness = 1.0; // 边框宽度
+  outlinePass.downSampleRatio = 1; // 边框弯曲度
+  outlinePass.pulsePeriod = 5; // 呼吸闪烁的速度
+  outlinePass.clear = true;
+  composer.addPass(outlinePass);
+
+  // 解决高亮后环境变暗的问题
+  const outputPass = new OutputPass();
+  composer.addPass(outputPass);
+
+  // 自定义的着色器通道 作为参数
+  effectFXAA = new ShaderPass(FXAAShader);
+  effectFXAA.uniforms["resolution"].value.set(
+    1 / window.innerWidth,
+    1 / window.innerHeight
+  );
+  effectFXAA.renderToScreen = true;
+  composer.addPass(effectFXAA);
+
+  // 抗锯齿
+  smaaPass = new SMAAPass();
+  composer.addPass(smaaPass);
+};
+
+// 点击事件获取模型信息
+const clickGetModelInfo = (data) => {
+  // console.log("点击的模型是==>", data.parent);
+  selectModelName.value = data.parent.name;
+};
+
+// 设置树形模型数据
+const treeModels_array = ref([]);
+const defaultProps = {
+  children: "children",
+  label: "label",
+};
+const treeModelsData = (val) => {
+  console.log(val);
+};
+
+watch(
+  () => association_name,
+  (newvalue, oldvalue) => {
+    // console.log(roboticArmModel);
+    treeModels_array.value = [];
+    roboticArmModel.traverse((child) => {
+      if (!(child instanceof THREE.Mesh) && child.name !== "robotic-arm") {
+        if (child instanceof THREE.Group) {
+          let data = {
+            label: child.name,
+            children: [],
+          };
+          treeModels_array.value.push(data);
+          // console.log(child);
+        } else if (child instanceof THREE.Object3D) {
+          // console.log(child);
+        }
+      }
+    });
+  },
+  { deep: true }
+);
 </script>
 
 <style lang="scss">
