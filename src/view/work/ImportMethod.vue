@@ -1,17 +1,8 @@
 <template>
   <div class="test-three" ref="testModels">
-    <div
-      style="
-        position: absolute;
-        bottom: 10px;
-        right: 40px;
-        color: #ffffff;
-        font-size: 14px;
-        z-index: 1000;
-      "
-    >
+    <div class="panel-box">
       <!-- <el-tree :data="treeModels_array" :props="defaultProps"></el-tree> -->
-      <div>当前选中的模型：{{ selectModelName }}</div>
+      <div>当前选中的模型：<strong>{{ selectModelName }}</strong></div>
       <div v-for="(item1, index1) in association_name" :key="index1">
         {{ item1 }}
       </div>
@@ -565,7 +556,7 @@ const rotateModel = (val, item) => {
       } else {
         model.rotation.y = val;
       }
-    } else if (item === "j4_model") {
+    } else if (item === "j4_model" || item === "j6_model") {
       if (model.parent.name === item + "_group") {
         model.parent.rotation.x = val;
       } else {
@@ -731,7 +722,7 @@ const add_composer = (selectedObjects) => {
 
 // 点击事件获取模型信息
 const clickGetModelInfo = (data) => {
-  // console.log("点击的模型是==>", data.parent);
+  console.log("点击的模型是==>", data.parent);
   selectModelName.value = data.parent.name;
 };
 
@@ -782,7 +773,7 @@ watch(
 }
 .test-three {
   .el-slider {
-    height: 20px;
+    height: 24px;
     .el-slider__button-wrapper {
       width: 20px;
       height: 20px;
@@ -804,6 +795,17 @@ watch(
           height: 22px;
         }
       }
+    }
+  }
+  .panel-box {
+    position: absolute;
+    bottom: 10px;
+    right: 40px;
+    color: #ffffff;
+    font-size: 14px;
+    z-index: 1000;
+    &>div{
+      margin: 12px 0;
     }
   }
 }
