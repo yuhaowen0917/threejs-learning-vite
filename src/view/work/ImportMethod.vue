@@ -722,7 +722,8 @@ const add_composer = (selectedObjects) => {
 
 // 点击事件获取模型信息
 const clickGetModelInfo = (data) => {
-  console.log("点击的模型是==>", data.parent);
+  // console.log("点击的模型是==>", data.parent, data);
+  // data.material.wireframe = true
   selectModelName.value = data.parent.name;
 };
 
