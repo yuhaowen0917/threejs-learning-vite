@@ -355,49 +355,185 @@ removeObjectFromScene(yourSceneOrGroup, objectToRemove);
  * @param item {string} 需要关联的模型的值, models 去关联绑定 name； 在被关联后就无法再次被点击关联
  */
 const NestedChildren = (value, item) => {
-  console.log(value, item);
-  let models; // 被关联的模型
-  let models1; // 寻求关联的模型
-  // 遍历所有子模型，不管多少层 获取到需要去关联的模型
-  roboticArmModel.traverse((child) => {
-    if (child instanceof THREE.Group && child.name === value) {
-      // console.log(child);
-      models = child;
-      return;
+  // console.log(value, item);
+  let models = findModel(value); // 被关联的模型
+  let models1 = findModel(item); // 寻求关联的模型
+  if (models && models1) {
+    // 关联模型创建一个分组对象
+    const model_group = new THREE.Object3D();
+    model_group.name = item + "_group";
+    model_group.add(models1.clone());
+    const parent = models1.parent; // 需要关联模型的父对象
+
+    // 被关联模型创建一个分组对象
+    const model_group1 = new THREE.Object3D();
+    model_group1.name = value + "_group";
+    model_group1.add(models.clone());
+    model_group1.add(model_group);
+    const parent1 = models.parent; // 被关联模型的父对象
+
+    // console.log(parent.name, parent1.name);
+    if (parent1.name === value + "_group") {
+      // 已存在被关联模型组件的分组对象，无需再次创建，直接导入需求关联的模型
+      // 一种是迁移分组，一种是在原本的分组中添加新的子组件
+      console.log("已存在被关联模型组件的分组对象");
+      let object_group;
+      roboticArmModel.traverse((child) => {
+        if (child instanceof THREE.Object3D && child.name === item + "_group") {
+          console.log(child.name, item + "_group");
+          object_group = child;
+          return;
+        }
+      });
+      // console.log(object_group);
+      if (object_group) {
+        parent1.add(object_group); // 加入的应该是之前的object分组，包含里面已分组的模型组件
+        parent.remove(object_group); // 删除的也应该是包含已分组模型组件的object分组
+        console.log("需要关联的对象分组已创建");
+      } else {
+        console.log("需要关联的对象没有创建分组");
+        parent1.add(model_group);
+        parent.remove(models1);
+        // parent1.remove(models);
+      }
+    } else if (parent.name === item + "_group") {
+      /* 
+        进行一种情况的判断，当object3D原本是存在的，此次修改只是切换关联对象，
+        只删除了原本的Group 但是未删除 object3D ，留下个空壳子,
+        要清除干净，不留痕迹
+        还得携带着原本关联的对象一起切换，拖家带口
+      */
+      const parent_parent = parent.parent;
+      console.log("object3D原本是存在的,切换关联对象", parent_parent);
+      let move_model;
+      roboticArmModel.traverse((child) => {
+        if (child instanceof THREE.Object3D && child.name === parent.name) {
+          move_model = child;
+          return;
+        }
+      });
+      // console.log(move_model, parent.name, models.name, model_group1);
+      parent_parent.remove(parent);
+      model_group1.add(move_model);
+      parent1.add(model_group1.remove(model_group)); // 加入的应该是原本的 object3D 无需新建，迁移
+      parent1.remove(models);
+      // console.log(move_model, model_group1.remove(model_group));
+    } else {
+      console.log("普普通通的关联对象");
+      parent1.add(model_group1);
+      parent.remove(models1);
+      parent1.remove(models);
     }
-  });
-  roboticArmModel.traverse((child) => {
-    if (child instanceof THREE.Group && child.name === item) {
-      models1 = child;
-      return;
-    }
-  });
-
-  // 关联模型创建一个分组对象
-  const model_group = new THREE.Object3D();
-  model_group.name = item + "_group";
-  model_group.add(models1.clone());
-  const parent = models1.parent;
-
-  // 被关联模型创建一个分组对象
-  const model_group1 = new THREE.Object3D();
-  model_group1.name = value + "_group";
-  model_group1.add(models.clone());
-  model_group1.add(model_group);
-  const parent1 = models.parent; // 被关联模型的父对象
-
-  console.log(parent.name, parent1.name);
-  if (parent1.name === value + "_group") {
-    console.log("已存在被关联模型组件的分组对象，无需再次创建");
-    parent1.add(model_group);
-    parent.remove(models1);
-    // parent1.remove(models);
-  } else {
-    parent1.add(model_group1);
-    parent.remove(models1);
-    parent1.remove(models);
   }
 
-  console.log(models, models1, roboticArmModel);
+  // console.log(models, models1, roboticArmModel);
+  console.log("切换后的整体模型数据", roboticArmModel);
 };
+
+```
+  
+```javascript
+// 根据传递的组件的name值，遍历整体模型中的所有子模型 不管多少层 获取到需要去关联的模型
+const findModel = (name) => {
+  // console.log(name); // 进行操作的模型名称
+  let model;
+  roboticArmModel.traverse((child) => {
+    if (child instanceof THREE.Group && child.name === name) {
+      model = child;
+      return;
+    }
+  });
+  return model;
+};
+
+```
+
+### 封装一个渲染模型的方法
+
+通过获取到的模型数据，直接导入渲染模型  
+封装一个模型渲染方法，减少代码量
+
+```javascript
+
+const gltModelsList = [
+  {
+    name: "base_model",
+    path: "./models/workModels/base.glb",
+    material: baseMaterial,
+  },
+  {
+    name: "j1_model",
+    path: "./models/workModels/j1.glb",
+    material: j1Material,
+  },
+  {
+    name: "j2_model",
+    path: "./models/workModels/j2.glb",
+    material: j2Material,
+  },
+  {
+    name: "j3_model",
+    path: "./models/workModels/j3.glb",
+    material: j3Material,
+  },
+  {
+    name: "j4_model",
+    path: "./models/workModels/j4.glb",
+    material: j4Material,
+  },
+  {
+    name: "j5_model",
+    path: "./models/workModels/j5.glb",
+    material: j5Material,
+  },
+  {
+    name: "j6_model",
+    path: "./models/workModels/j6.glb",
+    material: j6Material,
+  },
+];
+
+const GtlModelsMethods = () => {
+  gltModelsList.forEach((item) => {
+    // console.log(item);
+    initGtlModels_new(item.name, item.path, item.material);
+  });
+};
+
+/**
+ * 通过获取到的模型数据，直接导入渲染模型
+ * @param name {string} 模型组件的命名
+ * @param path {string} 导入的模型文件路径
+ * @param material {THREE.MeshPhysicalMaterial} 模型组件材质
+ * @return {glb} 导入后模型的数据信息
+ */
+
+const initGtlModels_new = (name, path, material) => {
+  gltfloader.load(
+    path,
+    function (glb) {
+      glb.scene.traverse((child) => {
+        // console.log("child", child);
+        if (child.isMesh) {
+          child.material = material;
+        }
+      });
+      glb.scene.position.set(0, 0, 0);
+      glb.scene.name = name;
+      group.add(glb.scene);
+    }
+    // (xhr) => {
+    //   // 加载进度
+    //   const percent = xhr.loaded / xhr.total;
+    //   console.log(name + "加载进度" + percent);
+    // }
+  );
+  // console.log("机械臂模型==>", group);
+  group.castShadow = true;
+  roboticArmModel = group;
+  // console.log(scene);
+  scene.add(group);
+  // treeModelsData(roboticArmModel);
+};
+
 ```
