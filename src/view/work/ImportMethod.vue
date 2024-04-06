@@ -2,7 +2,9 @@
   <div class="test-three" ref="testModels">
     <div class="panel-box">
       <!-- <el-tree :data="treeModels_array" :props="defaultProps"></el-tree> -->
-      <div>当前选中的模型：<strong>{{ selectModelName }}</strong></div>
+      <div>
+        当前选中的模型：<strong>{{ selectModelName }}</strong>
+      </div>
       <div v-for="(item1, index1) in association_name" :key="index1">
         {{ item1 }}
       </div>
@@ -805,7 +807,7 @@ watch(
     color: #ffffff;
     font-size: 14px;
     z-index: 1000;
-    &>div{
+    & > div {
       margin: 12px 0;
     }
   }
