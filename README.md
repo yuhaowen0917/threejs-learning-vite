@@ -537,3 +537,274 @@ const initGtlModels_new = (name, path, material) => {
 };
 
 ```
+
+### 导入本地模型渲染
+
+```html
+<el-upload
+  action=""
+  :on-preview="handlePreview"
+  :on-success="handleSuccess"
+  :on-progress="handleProgress"
+  :before-upload="handleBeforeUpload"
+  :http-request="uploadURL"
+  :show-file-list="false"
+  :on-change="handleChange"
+  multiple
+  accept=".glb,.obj,.gltf,.fbx,.stl"
+>
+  <el-button>导入模型</el-button>
+</el-upload>
+```
+
+事件触发
+```js
+import { setGltfModel, setStlModel, setObjModel } from '../../utils/ImportModel.js'
+
+handleChange(file, fileLists) {
+  // console.log('fileLists >>> ', fileLists) // 上传文件列表
+
+  this.robotNameList
+  const filePath = URL.createObjectURL(file.raw)
+  // console.log(file, filePath) // file.raw
+  const fileExtension = file.name.split('.').pop().toLowerCase()
+  const fileName = file.name.split('.')[0]
+  this.robotNameList.push(fileName)
+  const model = {
+    filePath,
+    fileType: fileExtension
+  }
+  // console.log(model.fileType, fileName)
+  switch (model.fileType) {
+    case 'glb':
+      setGltfModel(filePath, fileName)
+      break
+    case 'gltf':
+      setGltfModel(filePath, fileName)
+      break
+    case 'stl':
+      setStlModel(filePath, fileName)
+      break
+    case 'obj':
+      setObjModel(filePath, fileName)
+      break
+    default:
+      break
+  }
+  console.log('Scene >>>', this.$store.state.threeModels.sceneStore)
+}
+```
+
+封装的倒入不同格式模型的方法
+
+```js
+import * as THREE from 'three'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js'
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader'
+
+const gltfloader = new GLTFLoader()
+const stlloader = new STLLoader()
+const objloader = new OBJLoader()
+
+const group = new THREE.Group()
+group.name = 'gltfModelGroup'
+
+const group_1 = new THREE.Group()
+group_1.name = 'stllModelGroup'
+
+// 导入 store 共享使用
+import store from '../store/index'
+
+/**
+ * glb gltf格式模型导入
+ * @param filePath {string} 要导出的场景或对象
+ * @param fileName {string} 导出模型的格式
+ */
+export function setGltfModel(filePath, fileName) {
+  // const material = new THREE.MeshPhysicalMaterial({
+  //   color: 0xe7e7e7,
+  //   metalness: 1.0,
+  //   roughness: 0.5,
+  //   clearcoat: 1.0,
+  //   clearcoatRoughness: 0.05,
+  //   clearcoatNormalScale: 0.1
+  // })
+  // console.log(material)
+  gltfloader.load(
+    filePath,
+    (glb) => {
+      glb.scene.traverse((child) => {
+        // console.log('child', child)
+        if (child.isMesh && child instanceof THREE.Mesh) {
+          // child.material = material
+          console.log(child)
+          child.material.color = new THREE.Color(0xe7e700)
+        }
+      })
+      // console.log(glb.scene)
+      glb.scene.name = fileName
+      // glb.scene.scale.set(50, 50, 50)
+      glb.scene.position.x += 500
+
+      const rotateGroup = new THREE.Group()
+      rotateGroup.name = fileName + '_RotateGroup'
+
+      const model_group = new THREE.Group()
+      model_group.name = fileName + '_MoveGroup'
+
+      rotateGroup.add(glb.scene)
+      model_group.add(rotateGroup)
+      group.add(model_group)
+
+      store.commit('threeModels/renderModel', group)
+    },
+    (xhr) => {
+    // 加载进度
+      // const percent = xhr.loaded / xhr.total
+      // console.log(fileName + ' 加载进度 ' + (percent * 100).toFixed(2))
+    },
+    (err) => {
+      console.log(err)
+    }
+  )
+}
+
+// stl 格式模型导入
+export function setStlModel(filePath, fileName) {
+  stlloader.load(
+    filePath,
+    (stl) => {
+      console.log(stl)
+      const material = new THREE.MeshPhysicalMaterial({
+        color: 0x727200
+      })
+      const mesh = new THREE.Mesh(stl, material)
+      mesh.name = fileName
+      mesh.rotation.x = -0.5 * Math.PI
+      // mesh.scale.set(50, 50, 50)
+      mesh.position.x -= 500
+      console.log('stl', mesh)
+      store.commit('threeModels/renderModel', mesh)
+
+    //   console.log(stl)
+    },
+    (xhr) => {
+    // 加载进度
+      const percent = xhr.loaded / xhr.total
+      console.log(fileName + ' 加载进度 ' + (percent * 100).toFixed(2))
+    },
+    (err) => {
+      console.log(err)
+    }
+  )
+}
+
+// obj 格式模型导入
+export function setObjModel(filePath, fileName) {
+  objloader.load(
+    filePath,
+    (obj) => {
+      //   store.commit('threeModels/renderModel', obj)
+    //   const material = new THREE.MeshLambertMaterial({
+    //     color: 0x727200
+    //   })
+      obj.name = fileName
+      // obj.scale.set(50, 50, 50)
+      obj.position.z += 400
+      store.commit('threeModels/renderModel', obj)
+      console.log('obj', obj)
+    },
+    (xhr) => {
+      // 加载进度
+      const percent = xhr.loaded / xhr.total
+      console.log(fileName + ' 加载进度 ' + (percent * 100).toFixed(2))
+    },
+    (err) => {
+      console.log(err)
+    }
+  )
+}
+
+```
+
+### 导出本地模型渲染
+
+glTF (GL Transmission Format) 是一个用于高效传输和加载3D内容的 开放格式规范。 资源可以以 JSON (.gltf) 或二进制 (.glb) 格式提供。外部文件存储纹理 (.jpg, .png) 和额外的二进制数据 (.bin)。一个 glTF 资产可以包含一个或多个场景，包括网格、材质、纹理、蒙皮、骨骼、变形目标、动画、灯光和/或相机。
+
+```js
+// import * as THREE from 'three'
+import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js'
+
+const exporterGltf = new GLTFExporter()
+// 导入 store 共享使用
+// import store from '../store/index'
+
+/**
+ * 导出 glb 格式的模型
+ * @param object {THREE.Group} 要导出的场景或对象
+ * @param fileType {string} 导出模型的格式
+ */
+export function exporterGltfModel(object, fileType) {
+  const options = {
+    trs: true, // 是否保留位置、旋转、缩放信息
+    // animations: this.modelAnimation, // 导出的动画
+    binary: fileType === 'glb', // 是否以二进制格式输出
+    embedImages: true, // 是否嵌入贴图
+    onlyVisible: true, // 是否只导出可见物体
+    forcePowerOfTwoTextures: true,
+    includeCustomMaterials: true, // 指定是否包含自定义材质
+    includeCustomAttributes: true, //   指定是否包含自定义属性
+    includeCustomTextures: true, // 指定是否包含自定义纹理
+    includeCustomSamplers: true, // 指定是否包含自定义采样器
+    includeCustomImages: true, //   指定是否包含自定义图像
+    includeCustomTechniques: true, //   指定是否包含自定义技术
+    includeCustomMaterialsCommon: true, // 指定是否包含自定义 MaterialsCommon
+    includeCustomMeshes: true, // 指定是否包含自定义网格
+    includeCustomSkins: true, // 指定是否包含自定义皮肤
+    includeCustomNodes: true, // 指定是否包含自定义节点
+    includeCustomGeometries: true, // 指定是否包含自定义几何体
+    includeCustomPrograms: true, // 指定是否包含自定义程序
+    includeCustomShaders: true, // 指定是否包含自定义着色器
+    includeCustomExtensions: true // 指定是否包含自定义扩展。如果设置为true，则会包含在导出中定义的自定义GLTF扩展
+  }
+  exporterGltf.parse(
+    object,
+    function(gltf) {
+      console.log(gltf, object, fileType)
+      if (gltf instanceof ArrayBuffer) {
+        // 将结果保存为GLB二进制文件
+        saveArrayBuffer(gltf, `${new Date().toLocaleString()}.glb`)
+      } else {
+        // 将结果保存为GLTF JSON文件
+        saveString(JSON.stringify(gltf), `${new Date().toLocaleString()}.gltf`)
+      }
+    },
+    (err) => {
+      console.error(err)
+    },
+    options
+  )
+}
+
+export function saveArrayBuffer(buffer, filename) {
+  // 将二进制数据保存为文件
+  const blob = new Blob([buffer], { type: 'application/octet-stream' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  link.click()
+  URL.revokeObjectURL(url)
+}
+export function saveString(text, filename) {
+  // 将字符串数据保存为文件
+  const blob = new Blob([text], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  link.click()
+  URL.revokeObjectURL(url)
+}
+```
