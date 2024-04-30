@@ -808,3 +808,73 @@ export function saveString(text, filename) {
   URL.revokeObjectURL(url)
 }
 ```
+
+### 使用模型动画效果 animations
+
+```js
+// 创建GLTF实例
+const loader = new GLTFLoader();
+// 加载模型
+let mixer = null;
+// 飞行器动画模型
+const percentage = ref(0);
+let glt_model;
+let glt_model_child;
+loader.load(
+  "./models/glbModels/buster_drone.glb",
+  (glb) => {
+    console.log("glb", glb);
+    // 遍历模型中的物体
+    glb.scene.traverse((child) => {
+      // console.log(child);
+      if (child.isMesh) {
+        if (child.name === "F_P7_leg_0") {
+          child.material = new THREE.MeshPhongMaterial({
+            color: 0xff1100,
+          });
+          glt_model_child = child;
+          glt_model_child.material.visible = isFootVisible.value; // 控制模型显示隐藏
+          // console.log(glt_model_child.material);
+        }
+      }
+    });
+    glt_model = glb.scene;
+    glt_model.scale.set(1, 1, 1);
+    glt_model.position.set(-10, 2, 0);
+    glt_model.rotation.y = (Math.PI / 4) * 3;
+    // moveAnimationFrame();
+    // mixer = new THREE.AnimationMixer(glb.scene);
+    // // 这个方法会返回一个AnimationAction
+    // const action = mixer.clipAction(glb.animations[0]);
+    // // 使用play()方法调用这个AnimationAction
+    // action.play();
+
+    // mixer = startAnimation(glb.scene, glb.animations, glb.animations[0].name);
+
+    scene.add(glb.scene);
+  },
+  (xhr) => {
+    // 加载进度
+    // const percent = xhr.loaded / xhr.total;
+    // percentage.value = Number((percent * 100).toFixed());
+    // console.log("加载进度" + percent);
+  }
+);
+
+/**
+ * 启动特定网格对象的动画。在三维模型的动画数组中按名称查找动画
+ * @param skinnedMesh {THREE.SkinnedMesh} 要设置动画的网格
+ * @param animations {Array} 数组，包含此模型的所有动画
+ * @param animationName {string} 要启动的动画的名称
+ * @return {THREE.AnimationMixer} 要在渲染循环中使用的混合器
+ */
+function startAnimation(skinnedMesh, animations, animationName) {
+  const m_mixer = new THREE.AnimationMixer(skinnedMesh);
+  const clip = THREE.AnimationClip.findByName(animations, animationName);
+  if (clip) {
+    const action = m_mixer.clipAction(clip);
+    action.play();
+  }
+  return m_mixer;
+}
+```
