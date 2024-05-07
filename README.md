@@ -878,3 +878,28 @@ function startAnimation(skinnedMesh, animations, animationName) {
   return m_mixer;
 }
 ```
+
+### Three.js使用Draco解压模型
+
+```js
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+// 导入Draco加载器
+import {DRACOLoader} from 'three/examples/jsm/loaders/DRACOLoader'
+
+// 路径 three/examples/jsm/libs/draco
+
+const gltfLoader = new GLTFLoader();
+// 实例化draco载入库
+const dracoLoader = new DRACOLoader();
+// 添加draco载入库
+dracoLoader.setDecoderPath("./draco/");
+// 添加draco载入库
+gltfLoader.setDRACOLoader(dracoLoader);
+gltfLoader.load(
+    // 模型路径
+    "/src/assets/model/road.glb",
+    (gltf)=>{
+        console.log(gltf)
+    }
+)
+```
